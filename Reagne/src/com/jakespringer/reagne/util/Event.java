@@ -10,7 +10,7 @@ public class Event extends Signal<Object> {
     }
 
     public void send() {
-        send(Signal.DEFAULT_OBJECT);
+        set(Signal.DEFAULT_OBJECT);
     }
     
     public Event forEach(final Command command) {
@@ -36,7 +36,7 @@ public class Event extends Signal<Object> {
     ///
     private Event cloneAndRegisterE() {
         final Event cloned = new Event();
-        final Consumer<Object> consumer = x -> cloned.send(x);
+        final Consumer<Object> consumer = x -> cloned.set(x);
         listeners.add(consumer);
         cloned.removeMeFrom.addAll(removeMeFrom);
         cloned.removeMeFrom.add(new ImmutableTuple2<>(this, consumer));

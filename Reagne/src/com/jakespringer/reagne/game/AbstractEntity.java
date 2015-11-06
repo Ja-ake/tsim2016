@@ -7,12 +7,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public abstract class AbstractEntity implements Entity {
+public class AbstractEntity implements Entity {
 
     private final List<Signal> signals = new LinkedList();
 
     public void add(Signal... signalArray) {
         signals.addAll(Arrays.asList(signalArray));
+    }
+
+    @Override
+    public void create() {
     }
 
     @Override

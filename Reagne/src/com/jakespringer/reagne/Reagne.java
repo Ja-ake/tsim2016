@@ -1,11 +1,12 @@
 package com.jakespringer.reagne;
 
-import java.util.LinkedList;
-import java.util.Queue;
 import com.jakespringer.reagne.game.World;
 import com.jakespringer.reagne.util.Command;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class Reagne {
+
     private static Queue<Command> commandQueue = new LinkedList<>();
     private static boolean running = true;
     private static World theWorld;
@@ -13,7 +14,6 @@ public class Reagne {
     ///
     /// Public member variables
     ///
-
     /**
      * A stream that fires every tick. Will stream the delta time between each
      * tick.
@@ -28,13 +28,13 @@ public class Reagne {
 
     /**
      * Queues a command for executing during the next update loop.
-     * 
-     * @param command
-     *            the command to execute
+     *
+     * @param command the command to execute
      */
     public static void queueCommand(Command command) {
-        if (command == null)
+        if (command == null) {
             throw new NullPointerException();
+        }
 //        commandQueue.add(command);
         command.act();
     }
@@ -44,7 +44,7 @@ public class Reagne {
      */
     public static void run() {
         // initialize the game
-        initialize.send(initialize.get());
+        initialize.set(initialize.get());
         dispatchCommands();
 
         // run the game loop
@@ -52,8 +52,8 @@ public class Reagne {
         long previousTime = currentTime;
         while (running) {
             currentTime = System.nanoTime();
-            double deltaTime = ((double) currentTime - (double) previousTime) * 0.000001;
-            continuous.send(Double.valueOf(deltaTime));
+            double deltaTime = ((double) currentTime - (double) previousTime) * 0.000000001;
+            continuous.set(deltaTime);
             dispatchCommands();
             previousTime = currentTime;
         }
@@ -83,14 +83,15 @@ public class Reagne {
 
     /**
      * Returns the default resource folder.
-     * 
+     *
      * @return the resource folder
      */
     public static String getResourceFolder() {
         return "./";
     }
 
-    private Reagne() {} // disable construction of Reagens
+    private Reagne() {
+    } // disable construction of Reagens
 
     private static void dispatchCommands() {
 //        while (!commandQueue.isEmpty()) {

@@ -1,5 +1,6 @@
 package com.jakespringer.reagne;
 
+import com.jakespringer.reagne.util.Event;
 import com.jakespringer.reagne.util.ImmutableTuple2;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,8 +9,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
-public class Signal<T> {
+public class Signal<T> implements Supplier<T> {
 
     public static final Object DEFAULT_OBJECT = new Object();
 
@@ -45,7 +47,7 @@ public class Signal<T> {
      *
      * @param item the item to send
      */
-    public void send(T item) {
+    public void set(T item) {
         checkNull(item);
         data = item;
         listeners.stream().forEach(alertable -> {
@@ -67,6 +69,7 @@ public class Signal<T> {
      *
      * @return the last value of the stream
      */
+    @Override
     public T get() {
         return data;
     }
@@ -77,7 +80,7 @@ public class Signal<T> {
      * streams.</b>
      */
     public void remove() {
-        removeMeFrom.stream().forEach(pair -> pair.left.listeners.remove(pair.right));
+        removeMeFrom.forEach(pair -> pair.left.listeners.remove(pair.right));
         removeMeFrom.clear();
     }
 
@@ -107,7 +110,7 @@ public class Signal<T> {
 
         final Consumer<T> consumer = x -> {
             if (signal.get()) {
-                stream.send(x);
+                stream.set(x);
             }
         };
 
@@ -129,7 +132,7 @@ public class Signal<T> {
 
         final Consumer<T> consumer = x -> {
             if (predicate.test(x)) {
-                stream.send(x);
+                stream.set(x);
             }
         };
 
@@ -148,7 +151,7 @@ public class Signal<T> {
      */
     public Signal<T> combine(final Signal<T> stream) {
         final Signal<T> newStream = cloneAndRegister();
-        final Consumer<T> consumer = x -> newStream.send(x);
+        final Consumer<T> consumer = x -> newStream.set(x);
         final Consumer<T> consumer2 = x -> stream.data = x;
         stream.forEach(consumer);
         newStream.forEach(consumer2);
@@ -168,7 +171,7 @@ public class Signal<T> {
      */
     public <S> Signal<T> sendOn(final Signal<S> stream, final BiFunction<S, T, T> supplier) {
         final Signal<T> newStream = cloneAndRegister();
-        final Consumer<S> consumer = x -> newStream.send(supplier.apply(stream.get(), newStream.get()));
+        final Consumer<S> consumer = x -> newStream.set(supplier.apply(stream.get(), newStream.get()));
         stream.forEach(consumer);
         newStream.removeMeFrom.add(new ImmutableTuple2<>(stream, consumer));
         return newStream;
@@ -184,7 +187,7 @@ public class Signal<T> {
      */
     public <S> Signal<T> sendOn(final Signal<S> stream, final T payload) {
         final Signal<T> newStream = cloneAndRegister();
-        final Consumer<S> consumer = x -> newStream.send(payload);
+        final Consumer<S> consumer = x -> newStream.set(payload);
         stream.forEach(consumer);
         newStream.removeMeFrom.add(new ImmutableTuple2<>(stream, consumer));
         return newStream;
@@ -206,7 +209,7 @@ public class Signal<T> {
     ///
     private Signal<T> cloneAndRegister() {
         final Signal<T> cloned = new Signal<>(data);
-        final Consumer<T> consumer = x -> cloned.send(x);
+        final Consumer<T> consumer = x -> cloned.set(x);
         listeners.add(consumer);
         cloned.removeMeFrom.addAll(removeMeFrom);
         cloned.removeMeFrom.add(new ImmutableTuple2<>(this, consumer));
@@ -224,5 +227,9 @@ public class Signal<T> {
         if (item == null) {
             throw new NullPointerException("You cannot send a null item.");
         }
+    }
+
+    public Event asEvent() {
+        return new Event().sendOn(this);
     }
 }
