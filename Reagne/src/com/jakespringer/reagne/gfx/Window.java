@@ -41,7 +41,8 @@ public abstract class Window {
             ex.printStackTrace();
         }
 
-        Input.whenKey(Keyboard.KEY_F11, true).forEach($ -> Camera.setDisplayMode(viewSize, !Display.isFullscreen())).forEach($ -> System.out.println("hi"));
+        Input.whenKey(Keyboard.KEY_F11, true).forEach($ -> Camera.setDisplayMode(viewSize, !Display.isFullscreen()));
+        Input.whenKey(Keyboard.KEY_ESCAPE, true).forEach($ -> System.exit(0));
         Reagne.continuous.forEach(dt -> update());
     }
 
