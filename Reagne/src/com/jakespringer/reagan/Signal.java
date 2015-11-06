@@ -1,15 +1,12 @@
 package com.jakespringer.reagan;
 
+import com.jakespringer.reagan.util.Event;
+import com.jakespringer.reagan.util.ImmutableTuple2;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import com.jakespringer.reagan.util.Event;
-import com.jakespringer.reagan.util.ImmutableTuple2;
+import java.util.function.*;
 
 public class Signal<T> implements Supplier<T> {
 
@@ -231,5 +228,13 @@ public class Signal<T> implements Supplier<T> {
 
     public Event asEvent() {
         return new Event().sendOn(this);
+    }
+
+    public <S> Signal<S> map(Function<T, S> f) {
+        return new Signal<>(f.apply(data)).sendOn(this, (t, s) -> f.apply(t));
+    }
+
+    public void edit(UnaryOperator<T> o) {
+        set(o.apply(data));
     }
 }

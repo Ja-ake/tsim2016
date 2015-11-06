@@ -36,6 +36,10 @@ public class Vec2 {
         return Math.atan2(y, x);
     }
 
+    public Vec2 divide(double d) {
+        return new Vec2(x / d, y / d);
+    }
+
     public Vec2 divide(Vec2 v) {
         return new Vec2(x / v.x, y / v.y);
     }
