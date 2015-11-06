@@ -1,53 +1,63 @@
 package com.jakespringer.trump.lobster;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.net.UnknownHostException;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class LobsterClient {
     private Socket socket;
-    private DataInputStream console;
-    private DataOutputStream streamOut;
-    private DataInputStream streamIn;
+    private ServerHandler handler;
+    private Thread thread;
+    private int id;
     
-    public LobsterClient(String hostname, int port) {
-        try {
-            socket = new Socket(hostname, port);
-            System.out.println("Connected: " + socket + ".");
-            console = new DataInputStream(System.in);
-            streamOut = new DataOutputStream(socket.getOutputStream());
-            streamIn = new DataInputStream(socket.getInputStream());
-        } catch (UnknownHostException uhe) {
-            System.out.println("Host unknown: " + uhe.getMessage());
-        } catch (IOException ioe) {
-            System.out.println("Unexpected exception: " + ioe.getMessage());
-        }
-        String line = "";
-        while (!line.equals(".bye")) {
-            try {
-                if (console.available() > 0) {
-                    line = console.readLine();
-                    streamOut.writeUTF(line);
-                    streamOut.flush();
-                }
-                
-                if (streamIn.available() > 0) {
-                    String in = streamIn.readUTF();
-                    if (in.equals("PING")) {
-                        streamOut.writeUTF("PING");
+    public final ConcurrentLinkedQueue<String> queued;
+    public final ConcurrentLinkedQueue<String> received;
+
+    public LobsterClient(String hostname, int port) throws IOException {
+        socket = new Socket(hostname, port);
+        handler = new ServerHandler(socket);
+        
+        queued = handler.queued;
+        received = handler.received;
+        
+        thread = new Thread(handler);
+        thread.setDaemon(true);
+        thread.start();
+    }
+    
+    public void run() {
+        boolean start = false;
+        while (handler.isConnected() || !start) {
+            if (handler.isConnected()) start = true;
+            
+            String msg = received.poll();
+            if (msg != null) {
+                System.out.println(msg);
+                String[] args = msg.split("\\s");
+                switch (args[0]) {
+                case "SETID":
+                    if (args.length == 1) {
+                        try {
+                            id = Integer.parseInt(args[1]);
+                            System.out.println("id = "+id);
+                        } catch (NumberFormatException e) {
+                        }
                     }
-                    
-                    //System.out.println(in);
+                    break;
                 }
-            } catch (IOException ioe) {
-                System.out.println("Sending error: " + ioe.getMessage());
-            }
+            } else try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) { }
         }
     }
     
-    public static void main(String[] args) {
-        new LobsterClient("192.168.1.200", 55555);
+    public void stop() {
+        handler.disconnect();
+    }
+    
+    @Override
+    public void finalize() {
+        // not guarenteed to be called, but doesn't hurt
+        stop();
     }
 }

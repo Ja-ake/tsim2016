@@ -8,31 +8,29 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class ClientHandler implements Runnable {
+public class ServerHandler implements Runnable {
 
     private long currentTime;
     private long previousTime;
     private long elapsedAccum;
     private long keepAlive;
-    private boolean disconnected;
     
     private Socket socket;
+    private boolean disconnected;
     private DataInputStream streamIn;
     private DataOutputStream streamOut;
-    private int id;
     
     public final ConcurrentLinkedQueue<String> received;
     public final ConcurrentLinkedQueue<String> queued;
     
-    public ClientHandler(Socket sock, int i) throws IOException {
+    public ServerHandler(Socket sock) throws IOException {
         received = new ConcurrentLinkedQueue<>();
         queued = new ConcurrentLinkedQueue<>();
-        
+
         socket = sock;
         disconnected = false;
         streamIn = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
         streamOut = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-        id = i;
         
         currentTime = System.currentTimeMillis();
         previousTime = currentTime;
@@ -42,6 +40,10 @@ public class ClientHandler implements Runnable {
     
     public boolean isConnected() {
         return !disconnected;
+    }
+    
+    public void disconnect() {
+        disconnected = true;
     }
     
     @Override
@@ -78,7 +80,7 @@ public class ClientHandler implements Runnable {
                         keepAlive = 10000; // ten seconds
                     }
                     
-//                    System.out.println("[Client "+id+"] "+line);
+//                    System.out.println("[Server] "+line);
                     received.offer(line);
                 }
                 
@@ -98,10 +100,10 @@ public class ClientHandler implements Runnable {
                 }
             }
             
-            System.out.println("[INFO] Client " + id + " timed out and has been disconnected.");
+            System.out.println("[INFO] Server timed out and has been disconnected.");
         } catch (IOException e) {
             disconnected = true;
-            System.out.println("[INFO] Client " + id + " disconnected and created the exception: " + e + ".");
+            System.out.println("[INFO] Server disconnected and created the exception: " + e + ".");
         }
         
         try {

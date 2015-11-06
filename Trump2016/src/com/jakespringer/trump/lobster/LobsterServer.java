@@ -50,6 +50,7 @@ public class LobsterServer {
                 try {
                     Socket socket = server.accept();
                     ClientHandler handle = new ClientHandler(socket, ++currentId);
+                    handle.queued.offer("SETID "+currentId);
                     Thread thread = new Thread(handle);
                     synchronized (lock) {
                         handlers.add(new ImmutableTuple2<>(handle, thread));
@@ -63,9 +64,5 @@ public class LobsterServer {
         } catch (IOException e) {
             System.out.println("[SEVERE] " + e);
         }
-    }
-    
-    public static void main(String[] args) {
-        new LobsterServer(55555);
     }
 }
