@@ -6,7 +6,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
-import com.jakespringer.reagne.util.ImmutableTuple2;
+import com.jakespringer.reagan.util.ImmutableTuple2;
 
 /**
  * Trump had a quote about selling lobsters
