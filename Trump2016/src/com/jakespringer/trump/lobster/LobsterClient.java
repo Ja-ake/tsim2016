@@ -10,6 +10,7 @@ public class LobsterClient {
     private Socket socket;
     private DataInputStream console;
     private DataOutputStream streamOut;
+    private DataInputStream streamIn;
     
     public LobsterClient(String hostname, int port) {
         try {
@@ -17,6 +18,7 @@ public class LobsterClient {
             System.out.println("Connected: " + socket + ".");
             console = new DataInputStream(System.in);
             streamOut = new DataOutputStream(socket.getOutputStream());
+            streamIn = new DataInputStream(socket.getInputStream());
         } catch (UnknownHostException uhe) {
             System.out.println("Host unknown: " + uhe.getMessage());
         } catch (IOException ioe) {
@@ -25,9 +27,20 @@ public class LobsterClient {
         String line = "";
         while (!line.equals(".bye")) {
             try {
-                line = console.readLine();
-                streamOut.writeUTF(line);
-                streamOut.flush();
+                if (console.available() > 0) {
+                    line = console.readLine();
+                    streamOut.writeUTF(line);
+                    streamOut.flush();
+                }
+                
+                if (streamIn.available() > 0) {
+                    String in = streamIn.readUTF();
+                    if (in.equals("PING")) {
+                        streamOut.writeUTF("PING");
+                    }
+                    
+                    //System.out.println(in);
+                }
             } catch (IOException ioe) {
                 System.out.println("Sending error: " + ioe.getMessage());
             }
