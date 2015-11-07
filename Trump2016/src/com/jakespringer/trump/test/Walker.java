@@ -35,16 +35,19 @@ public class Walker extends AbstractEntity {
         precal.setMoveSpeed(10.0);
         precal.setJumpSpeed(10.0);
         precal.setGravitySpeed(1.0);
-        System.out.println("first");
         precal.precalculate();
-        System.out.println("second");
         
         graph = precal.graph;
-        nextSteps = graph.getShortestPath(graph.getNodeList().get(23), graph.getNodeList().get(46));
+        nextSteps = graph.getShortestPath(graph.getNodeList().get(0), graph.getNodeList().get(1));
 
+        final int xpos = graph.getNodeList().get(0).x; 
+        final int ypos = graph.getNodeList().get(0).y;
         velocity = new Signal<>(new Vec2());
-        position = new Signal<>(new Vec2(graph.getNodeList().get(23).x * 20.0, graph.getNodeList().get(23).y * 20.0 + 10.0));
+        position = new Signal<>(Walls.gridToActual(xpos-1, ypos+1));
 
+        final int x2pos = graph.getNodeList().get(4).x;
+        final int y2pos = graph.getNodeList().get(4).y;
+        
         add(velocity, position);
 
         // Collisions
@@ -56,18 +59,23 @@ public class Walker extends AbstractEntity {
 
         // Graphics
         onUpdate(dt -> Graphics2D.fillEllipse(position.get(), new Vec2(16, 16), Color4.RED, 20));
-
+        
+        onUpdate(dt -> Graphics2D.fillEllipse(Walls.gridToActual(xpos, ypos), new Vec2(8, 8), Color4.GREEN, 16));
+        onUpdate(dt -> Graphics2D.fillEllipse(Walls.gridToActual(x2pos, y2pos), new Vec2(8, 8), Color4.GREEN, 16));
+        
+        Window.viewPos = position.get();
+        
         // Moving view
         onUpdate(dt -> Window.viewPos = position.get().interpolate(Window.viewPos, dt * 4));
 
         onUpdate(dt -> {
-            if (nextSteps.isEmpty())
+            if (nextSteps.isEmpty() && (immediateSteps == null || immediateSteps.isEmpty()) && rightNow == null)
                 return;
             if (immediateSteps == null || immediateSteps.isEmpty())
                 immediateSteps = nextSteps.remove(0).instructions;
             if (rightNow == null)
                 rightNow = immediateSteps.remove(0);
-
+            
             if (rightNow.delay > 0) {
                 rightNow.delay -= dt;
                 return;
@@ -75,23 +83,32 @@ public class Walker extends AbstractEntity {
 
             if (rightNow.amount > 0) {
                 if (rightNow.type == Instruction.Type.MOVE_LEFT) {
-                    rightNow.amount -= velocity.get().x * dt;
+                    rightNow.amount -= Math.abs(velocity.get().x * dt);
                     velocity.set(velocity.get().withX(-200));
+                    
+                    System.out.println("amountl " + rightNow.amount);
+                    return;
                 }
                 if (rightNow.type == Instruction.Type.MOVE_RIGHT) {
-                    rightNow.amount -= velocity.get().x * dt;
+                    rightNow.amount -= Math.abs(velocity.get().x * dt);
                     velocity.set(velocity.get().withX(200));
+                    
+                    System.out.println("amountr " + rightNow.amount);
+                    return;
                 }
-                if (rightNow.type == Instruction.Type.FALL) {
-                    rightNow.amount -= velocity.get().y * dt;
-                    velocity.set(velocity.get().withX(0));
-                }
-                if (rightNow.type == Instruction.Type.JUMP) {
-                    rightNow.amount -= velocity.get().y * dt;
-                    velocity.set(velocity.get().withY(1000));
-                }
-
-                return;
+                
+                System.out.println("a " + rightNow.amount);
+            } else {
+                velocity.set(velocity.get().withX(0));
+            }
+            
+            if (rightNow.type == Instruction.Type.FALL) {
+//                rightNow.amount -= velocity.get().y * dt;
+                velocity.set(velocity.get().withX(0));
+            }
+            if (rightNow.type == Instruction.Type.JUMP) {
+//                rightNow.amount -= velocity.get().y * dt;
+                velocity.set(velocity.get().withY(1000));
             }
 
             rightNow = null;

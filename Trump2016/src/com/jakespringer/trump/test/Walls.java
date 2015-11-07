@@ -102,4 +102,8 @@ public class Walls extends AbstractEntity {
             }
         });
     }
+    
+    public static Vec2 gridToActual(int x, int y) {
+        return new Vec2(x-walls.width/2, y-walls.width/2).multiply(walls.wallSize);
+    }
 }
