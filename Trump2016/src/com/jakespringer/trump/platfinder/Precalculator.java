@@ -43,6 +43,7 @@ public class Precalculator {
     private void createNodes() {
         for (int x = 0; x < blockArray.length - 1; x++) {
             for (int y = 0; y < blockArray[x].length - 1; y++) {
+                System.out.println("hi");
                 if (!checkPlayerCollision(x, y) && checkPlayerCollision(x, y - 1)) {
                     if (!checkPlayerCollision(x - 1, y) && !checkPlayerCollision(x - 1, y - 1)) {
                         // left edge
@@ -67,10 +68,12 @@ public class Precalculator {
     }
 
     private void createConnections() {
+        int i =0;
         List<Node> nodeList = graph.getNodeList();
         for (Node self : nodeList) {
             for (Node other : nodeList) {
                 if (self != other) {
+                    System.out.println(++i);
                     createConnection(self, other);
                 }
             }
