@@ -2,16 +2,17 @@ package com.jakespringer.trump.test;
 
 import java.util.List;
 import java.util.function.BooleanSupplier;
+
 import com.jakespringer.reagan.Signal;
 import com.jakespringer.reagan.game.AbstractEntity;
 import com.jakespringer.reagan.gfx.Graphics2D;
 import com.jakespringer.reagan.gfx.Window;
 import com.jakespringer.reagan.math.Color4;
 import com.jakespringer.reagan.math.Vec2;
-import com.jakespringer.trump.platfinder.Instruction;
-import com.jakespringer.trump.platfinder.NodeConnector;
-import com.jakespringer.trump.platfinder.PlatfinderGraph;
-import com.jakespringer.trump.platfinder.Precalculator;
+import com.jakespringer.trump.platfinder.old.Instruction;
+import com.jakespringer.trump.platfinder.old.NodeConnector;
+import com.jakespringer.trump.platfinder.old.PlatfinderGraph;
+import com.jakespringer.trump.platfinder.old.Precalculator;
 
 public class Walker extends AbstractEntity {
 

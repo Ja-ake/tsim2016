@@ -7,11 +7,12 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import com.jakespringer.trump.platfinder.Instruction;
-import com.jakespringer.trump.platfinder.Node;
-import com.jakespringer.trump.platfinder.NodeConnector;
-import com.jakespringer.trump.platfinder.PlatfinderGraph;
-import com.jakespringer.trump.platfinder.Precalculator;
+
+import com.jakespringer.trump.platfinder.old.Instruction;
+import com.jakespringer.trump.platfinder.old.Node;
+import com.jakespringer.trump.platfinder.old.NodeConnector;
+import com.jakespringer.trump.platfinder.old.PlatfinderGraph;
+import com.jakespringer.trump.platfinder.old.Precalculator;
 
 public class Tester {
     public static void main(String[] args) {

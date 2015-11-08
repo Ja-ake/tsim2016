@@ -1,4 +1,4 @@
-package com.jakespringer.trump.platfinder;
+package com.jakespringer.trump.platfinder.old;
 
 import java.awt.Rectangle;
 import java.awt.geom.Area;

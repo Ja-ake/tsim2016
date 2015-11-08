@@ -1,4 +1,4 @@
-package com.jakespringer.trump.platfinder;
+package com.jakespringer.trump.platfinder.old;
 
 import java.util.ArrayList;
 import java.util.List;
