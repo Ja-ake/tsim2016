@@ -1,9 +1,13 @@
 package com.jakespringer.trump.platfinder;
 
 import com.jakespringer.reagan.Reagan;
+import com.jakespringer.reagan.game.AbstractEntity;
 import com.jakespringer.reagan.game.World;
 import com.jakespringer.reagan.gfx.FontContainer;
+import com.jakespringer.reagan.gfx.Graphics2D;
 import com.jakespringer.reagan.gfx.Window;
+import com.jakespringer.reagan.input.Input;
+import com.jakespringer.reagan.math.Color4;
 import com.jakespringer.reagan.math.Vec2;
 import com.jakespringer.reagan.util.Mutable;
 import com.jakespringer.trump.game.Tile;
@@ -17,7 +21,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 
-public class NodeGraph {
+public class NodeGraph extends AbstractEntity {
 
     public static void main(String[] args) {
         System.setProperty("org.lwjgl.librarypath", new File("../Reagne/natives").getAbsolutePath());
@@ -33,9 +37,28 @@ public class NodeGraph {
         world.addAndGet(new ViewController()).position.set(new Vec2(1000, 1500));
 
         red = new NodeGraph(Walls.walls.grid, true);
+        Reagan.world().add(red);
         blue = new NodeGraph(Walls.walls.grid, false);
 
         Reagan.run(world);
+    }
+
+    public boolean debug;
+
+    @Override
+    public void create() {
+        add(Input.whenMouse(2, true).forEach($ -> debug = !debug));
+        onUpdate(dt -> {
+            if (debug) {
+                nodeList.forEach(n -> Graphics2D.fillEllipse(n.p.toVec2(), new Vec2(4, 4), new Color4(1, 1, 0), 8));
+                Node n = get(nodeGrid, new Point(Input.getMouse()));
+                if (n != null) {
+                    n.from.forEach(c -> Graphics2D.drawLine(c.from.p.toVec2(), c.to.p.toVec2(), new Color4(1, 1, 0), 2));
+                    n.from.forEach(c -> Graphics2D.fillEllipse(c.to.p.toVec2(), new Vec2(4, 4), Color4.GREEN, 8));
+                    n.from.forEach(c -> Graphics2D.drawText(c.instructions.time + "", c.to.p.toVec2()));
+                }
+            }
+        });
     }
 
     public static class Point {
@@ -171,7 +194,7 @@ public class NodeGraph {
         best_cost.put(start, 0.);
         Map<Node, Connection> best_parent = new HashMap();
 
-        Function<Node, Double> heuristic = n -> (double) Math.abs(end.p.x - n.p.x);
+        Function<Node, Double> heuristic = n -> Walls.walls.wallSize / 150 * Math.abs(end.p.x - n.p.x);
 
         ToDoubleFunction<Node> expected_cost = n -> {
             Double cost = best_cost.get(n);
@@ -181,10 +204,12 @@ public class NodeGraph {
             return cost + heuristic.apply(n);
         };
 
-        PriorityQueue<Node> openSet = new PriorityQueue<>(Comparator.comparingDouble(expected_cost));
+        //PriorityQueue<Node> openSet = new PriorityQueue<>(Comparator.comparingDouble(expected_cost).reversed());
+        LinkedList<Node> openSet = new LinkedList();
         openSet.add(start);
 
         while (!openSet.isEmpty()) {
+            Collections.sort(openSet, Comparator.comparingDouble(expected_cost));
             Node current = openSet.poll();
             if (current == end) {
                 List<Connection> path = new LinkedList();
@@ -196,10 +221,7 @@ public class NodeGraph {
                 return path;
             }
             closedSet.add(current);
-            current.from.forEach(c -> {
-                if (closedSet.contains(c.to)) {
-                    return;
-                }
+            current.from.stream().filter(c -> !closedSet.contains(c.to)).forEach(c -> {
                 double possible_cost = best_cost.get(current) + c.instructions.time;
                 Double current_cost = best_cost.get(c.to);
                 if (current_cost == null) {
@@ -257,7 +279,7 @@ public class NodeGraph {
         }
         if (dy == 0 && dx <= 1) {
             v0 = 0;
-            t0 = -.001;
+            t0 = -.000001;
         }
         return new Instructions(v0, t0, t0 + t1);
     }

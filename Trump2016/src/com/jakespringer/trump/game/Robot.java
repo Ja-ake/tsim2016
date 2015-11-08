@@ -1,14 +1,5 @@
 package com.jakespringer.trump.game;
 
-import static com.jakespringer.trump.game.Tile.WallType.BLUE_DOOR;
-import static com.jakespringer.trump.game.Tile.WallType.GRAY_DOOR;
-import static com.jakespringer.trump.game.Tile.WallType.RED_DOOR;
-import static com.jakespringer.trump.game.Tile.WallType.SPIKE;
-
-import java.util.LinkedList;
-import java.util.List;
-import java.util.function.BooleanSupplier;
-
 import com.jakespringer.reagan.Reagan;
 import com.jakespringer.reagan.Signal;
 import com.jakespringer.reagan.game.AbstractEntity;
@@ -16,19 +7,23 @@ import com.jakespringer.reagan.gfx.Sprite;
 import com.jakespringer.reagan.math.Color4;
 import com.jakespringer.reagan.math.Vec2;
 import com.jakespringer.reagan.util.Mutable;
+import static com.jakespringer.trump.game.Tile.WallType.*;
 import com.jakespringer.trump.network.NetworkedMain;
 import com.jakespringer.trump.network.RobotDestroyedEvent;
 import com.jakespringer.trump.network.RobotStateEvent;
 import com.jakespringer.trump.particle.ParticleBurst;
 import com.jakespringer.trump.platfinder.NodeGraph;
 import com.jakespringer.trump.platfinder.NodeGraph.Connection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.function.BooleanSupplier;
 
 public class Robot extends AbstractEntity {
 
     public static final List<Robot> redList = new LinkedList<>();
     public static final List<Robot> blueList = new LinkedList<>();
 
-    public static final Vec2 size = new Vec2(16, 16);
+    public static final Vec2 size = new Vec2(14, 16);
 
     public static Vec2 redGoal, blueGoal;
 
@@ -52,7 +47,6 @@ public class Robot extends AbstractEntity {
         //Position and velocity
         Signal<Double> speed = new Signal<>(150.);
         velocity = new Signal<>(new Vec2()).sendOn(Reagan.continuous, (dt, v) -> v.withX(0));
-        //.forEach(v -> new RuntimeException(v.toString()).printStackTrace());
         position = new Signal<>(new Vec2());
         add(velocity, position);
 
@@ -63,7 +57,6 @@ public class Robot extends AbstractEntity {
         Mutable<Double> time = new Mutable<>(0.);
         onUpdate(dt -> {
             if (c.o != null) {
-                //Graphics2D.drawLine(c.o.from.p.toVec2(), c.o.to.p.toVec2(), new Color4(1, .5, 0), 2);
                 if (time.o < c.o.instructions.jumpDelay) {
                     //Nothing
                 } else if (time.o < c.o.instructions.time) {
@@ -82,6 +75,14 @@ public class Robot extends AbstractEntity {
                             c.o = list.get(0);
                             velocity.edit(v -> v.withY(c.o.instructions.jumpSpeed));
                             time.o = 0.;
+
+                            if (time.o < c.o.instructions.jumpDelay) {
+                                //Nothing
+                            } else if (time.o < c.o.instructions.time) {
+                                velocity.edit(v -> v.withX(speed.get() * Math.signum(c.o.to.p.x - c.o.from.p.x)));
+                            } else {
+                                c.o = null;
+                            }
                         }
                     }
                 }
@@ -89,8 +90,7 @@ public class Robot extends AbstractEntity {
         });
 
         //Collisions
-        add(Walls.makeCollisionSystem(position, velocity, size, team));//.filter($ -> onGround.getAsBoolean())
-        //.filter(i -> i % 2 == 1).forEach(i -> velocity.edit(v -> v.withY(600))));
+        add(Walls.makeCollisionSystem(position, velocity, size, team));
 
         //Gravity
         onUpdate(dt -> velocity.edit(v -> v.add(new Vec2(0, -1500 * dt))));
@@ -162,23 +162,27 @@ public class Robot extends AbstractEntity {
                 -> t.change(team ? RED_DOOR : BLUE_DOOR, team ? "red_door" : "blue_door")));
 
         //Death to spikes
-        onUpdate(dt -> Walls.tilesAt(position.get(), size).stream().filter(t -> t.type == SPIKE).forEach(t -> explode()));
-        
+        onUpdate(dt -> {
+            if (Walls.tileAt(position.get()).type == SPIKE) {
+                explode();
+            }
+        });
+
         add(Reagan.periodic(0.2).forEach(() -> {
-        	if (NetworkedMain.networked && NetworkedMain.client.dictator) {
-        		NetworkedMain.networkHandler.submit(
-        				new RobotStateEvent(id, position.get().x, position.get().y, velocity.get().x, velocity.get().y));
-        	}
+            if (NetworkedMain.networked && NetworkedMain.client.dictator) {
+                NetworkedMain.networkHandler.submit(
+                        new RobotStateEvent(id, position.get().x, position.get().y, velocity.get().x, velocity.get().y));
+            }
         }));
     }
 
     @Override
     public void destroy() {
-    	if (NetworkedMain.networked) {
-    		NetworkedMain.networkHandler.submit(
-    				new RobotDestroyedEvent(id));
-    	}
-    	
+        if (NetworkedMain.networked) {
+            NetworkedMain.networkHandler.submit(
+                    new RobotDestroyedEvent(id));
+        }
+
         (team ? redList : blueList).remove(this);
         super.destroy();
     }
@@ -186,8 +190,8 @@ public class Robot extends AbstractEntity {
     public void explode() {
         ParticleBurst p = new ParticleBurst();
         p.position = position.get();
-        p.speed = 100;
-        p.lifeTime = .5;
+        p.speed = 300;
+        p.lifeTime = .2;
         p.number = 100;
         p.color = team ? Color4.RED : Color4.BLUE;
         Reagan.world().add(p);
