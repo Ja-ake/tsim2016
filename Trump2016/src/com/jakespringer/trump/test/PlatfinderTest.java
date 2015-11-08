@@ -12,12 +12,11 @@ public class PlatfinderTest {
         System.setProperty("org.lwjgl.librarypath", new File("../Reagne/natives").getAbsolutePath());
 
         final World world = new World();
-
         Window.initialize(1200, 800, "Test");
 
 //        Input.whileKeyPressed(Keyboard.KEY_0).forEach(x -> System.out.println("Time elapsed: " + x));
         world.add(new Walls());
-        world.add(new Walker(Walls.walls.grid));
+//        world.add(new Walker(Walls.walls.grid));
 
         Reagan.run(world);
     }

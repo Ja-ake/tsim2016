@@ -87,8 +87,8 @@ public class Walls extends AbstractEntity {
         boolean[][] r = new boolean[width][height];
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                r[x][y] = text.get(y).charAt(0) == 'X';
-                grid[x][y] = loadTile(x, y, r[x][y] ? 0 : 1);
+                r[x][y] = text.get(height-y-1).charAt(x) == 'X';
+                grid[x][y] = r[x][y] ? new Tile(x, y, WALL, "stone") : new Tile(x, y, AIR, null);
             }
         }
         return r;
