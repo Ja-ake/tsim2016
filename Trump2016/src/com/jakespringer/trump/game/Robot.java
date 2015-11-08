@@ -17,8 +17,8 @@ import java.util.function.BooleanSupplier;
 
 public class Robot extends AbstractEntity {
 
-    public static final List<Robot> redList = new LinkedList();
-    public static final List<Robot> blueList = new LinkedList();
+    public static final List<Robot> redList = new LinkedList<>();
+    public static final List<Robot> blueList = new LinkedList<>();
 
     public static final Vec2 size = new Vec2(16, 16);
 
@@ -28,6 +28,16 @@ public class Robot extends AbstractEntity {
     public Signal<Vec2> position;
     public Signal<Double> health;
     public boolean team;
+    
+    public int id;
+    
+    public Robot() {
+    	id = (int) (Math.random()*Long.MAX_VALUE);
+    }
+    
+    public Robot(int i) {
+    	id = i;
+    }
 
     @Override
     public void create() {
@@ -41,8 +51,8 @@ public class Robot extends AbstractEntity {
         BooleanSupplier onGround = () -> Walls.collisionAt(position.get().add(new Vec2(0, -1)), size, team);
 
         //Follow path
-        Mutable<Connection> c = new Mutable(null);
-        Mutable<Double> time = new Mutable(0.);
+        Mutable<Connection> c = new Mutable<>(null);
+        Mutable<Double> time = new Mutable<>(0.);
         onUpdate(dt -> {
             if (c.o != null) {
                 Graphics2D.drawLine(c.o.from.p.toVec2(), c.o.to.p.toVec2(), new Color4(1, .5, 0), 2);
@@ -110,7 +120,7 @@ public class Robot extends AbstractEntity {
 
         //Shooting
         add(new Signal<>(0.).sendOn(Reagan.continuous, (dt, t) -> {
-            Mutable<Double> fireTime = new Mutable(t);
+            Mutable<Double> fireTime = new Mutable<>(t);
             if (t > .5) {
                 speed.set(150.);
                 List<Robot> enemy = team ? blueList : redList;
