@@ -19,6 +19,8 @@ public class NetworkedMain {
 	public static LobsterClient client;
 	public static MainCommandHandler networkHandler;
 	public static boolean networked = false;
+	public static BuildMenu buildMenu;
+	public static boolean bm = true;
 	
     public static void main(String[] args) throws IOException {
         System.setProperty("org.lwjgl.librarypath", new File("../Reagne/natives").getAbsolutePath());
@@ -27,9 +29,11 @@ public class NetworkedMain {
         final World world = new World();
         FontContainer.create();
 
-        client = new LobsterClient("localhost", 55555);   
+        client = new LobsterClient("10.144.221.50", 55555);   
         client.commandDispatch = networkHandler = new MainCommandHandler(client);
 
+        client.queued.offer("JOINED");
+        
         Thread d = new Thread(client::run);
         d.setDaemon(true);
         d.start();
@@ -37,7 +41,7 @@ public class NetworkedMain {
         networked = true;
 
         world.addAndGet(new Walls()).loadImage();
-        world.addAndGet(new BuildMenu(true));
+        buildMenu = world.addAndGet(new BuildMenu(bm));
         world.addAndGet(new ViewController()).position.set(new Vec2(1000, 1500));
         
         NodeGraph.red = new NodeGraph(Walls.walls.grid, true);

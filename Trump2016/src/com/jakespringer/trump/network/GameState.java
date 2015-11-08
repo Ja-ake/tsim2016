@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.jakespringer.reagan.Reagan;
 import com.jakespringer.reagan.game.World;
+import com.jakespringer.trump.game.Robot;
+
 
 public class GameState {
 	private List<GameEvent> events = new LinkedList<>();
@@ -36,11 +38,11 @@ public class GameState {
 						i += 5;
 						break;
 					case "ROBOTCREATED":
-						RobotCreatedEvent.handle(args[i + 1], args[i + 2]);
+						RobotCreatedEvent.handle(args[i+1], args[i+2]);
 						i += 3;
 						break;
 					case "ROBOTDESTROYED":
-						RobotCreatedEvent.handle(args[i + 1]);
+						RobotDestroyedEvent.handle(args[i + 1]);
 						i += 2;
 						break;
 					case "ROBOTSTATE":
@@ -56,6 +58,7 @@ public class GameState {
 						break;
 					}
 				}
-		}});
+			}
+		});
 	}
 }

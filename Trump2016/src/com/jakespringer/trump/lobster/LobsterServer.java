@@ -94,6 +94,9 @@ public class LobsterServer {
             		handle.queued.offer("DICTATOR " + authoritarian);
                     Thread thread = new Thread(handle);
                     synchronized (lock) {
+//                    	for (ImmutableTuple2<ClientHandler, Thread> h : handlers) {
+//                    		h.left.queued.offer("JOINED "+handle.id);
+//                    	}
                         handlers.add(new ImmutableTuple2<>(handle, thread));
                         thread.setDaemon(true);
                         thread.start();

@@ -2,6 +2,7 @@ package com.jakespringer.trump.network;
 
 import com.jakespringer.reagan.Reagan;
 import com.jakespringer.reagan.game.World;
+import com.jakespringer.trump.game.Robot;
 import com.jakespringer.trump.lobster.CommandHandler;
 import com.jakespringer.trump.lobster.LobsterClient;
 
@@ -24,6 +25,18 @@ public class MainCommandHandler implements CommandHandler {
 		final World world = Reagan.world();
 		if (command[0].equals("GAMESTATE")) {
 			state.process(command, world);
+		} else if (command[0].equals("JOINED")) {
+			client.queued.offer("RED " + !NetworkedMain.buildMenu.team.get());
+			Reagan.world().stream().forEach(e -> {
+				if (e instanceof Robot) {
+					Robot r = (Robot) e;
+					submit(new RobotCreatedEvent(r.id, r.team));
+				}
+			});
+		} else if (command[0].equals("RED")) {
+			boolean red = Boolean.parseBoolean(command[1]);
+			if (NetworkedMain.buildMenu != null) NetworkedMain.buildMenu.team.set(red);
+			else NetworkedMain.bm = red;
 		}
 	}
 	
