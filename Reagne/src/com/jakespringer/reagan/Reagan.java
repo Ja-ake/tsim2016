@@ -1,9 +1,9 @@
 package com.jakespringer.reagan;
 
-import java.util.LinkedList;
-import java.util.Queue;
 import com.jakespringer.reagan.game.World;
 import com.jakespringer.reagan.util.Command;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class Reagan {
 
@@ -79,6 +79,10 @@ public class Reagan {
      */
     public static World world() {
         return theWorld;
+    }
+
+    public static void setWorld(World w) {
+        theWorld = w;
     }
 
     /**
