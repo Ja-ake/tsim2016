@@ -17,12 +17,15 @@ public class Menu extends AbstractEntity {
     @Override
     public void create() {
         Texture tex = SpriteContainer.loadSprite("menu");
-        Vec2 LL = new Vec2();
-        Vec2 UR = new Vec2();
+        //FontContainer.add("Menu", "Helvetica", Font.BOLD, 70);
+        Vec2 LL = new Vec2(355, 350);
+        Vec2 UR = new Vec2(870, 545);
         onUpdate(dt -> {
             Graphics2D.drawSprite(tex, new Vec2(0, 0), new Vec2(1, 1), 0, Color4.WHITE);
-            Graphics2D.drawRect(LL, UR.subtract(LL), Input.getMouseScreen().containedBy(LL, UR) ? new Color4(.8, .8, .8) : new Color4(.6, .6, .6));
-            Graphics2D.drawText("Player", LL.interpolate(UR, .5));
+            //System.out.println(Input.getMouseScreen().containedBy(LL, UR));
+            //Graphics2D.fillEllipse(new Vec2(), UR, Color4.GREEN, 200);
+            Graphics2D.fillRect(LL.subtract(new Vec2(600, 400)), UR.subtract(LL), Input.getMouseScreen().containedBy(LL, UR) ? new Color4(0, 0, 0, 0) : new Color4(.5, .5, .5, .4));
+            //Graphics2D.drawText("Play", "Menu", new Vec2((LL.x + UR.x) / 2, UR.y).subtract(new Vec2(600 + FontContainer.get("Menu").getWidth("Play") / 2, 400)), Color.black);
         });
         add(Input.whenMouse(0, true).filter($ -> Input.getMouseScreen().containedBy(LL, UR)).forEach($ -> {
             //Start world - jake fill this out
