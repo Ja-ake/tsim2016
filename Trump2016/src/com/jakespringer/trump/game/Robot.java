@@ -14,6 +14,7 @@ import com.jakespringer.trump.network.RobotStateEvent;
 import com.jakespringer.trump.particle.ParticleBurst;
 import com.jakespringer.trump.platfinder.NodeGraph;
 import com.jakespringer.trump.platfinder.NodeGraph.Connection;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
@@ -256,7 +257,7 @@ public class Robot extends AbstractEntity {
             }
         }
 
-        (team ? blueList : redList).stream().forEach(r -> {
+        new ArrayList<>(team ? blueList : redList).stream().forEach(r -> {
             if (position.get().subtract(r.position.get()).lengthSquared() < 80 * 80) {
                 r.health.edit(d -> d - 50);
             }
