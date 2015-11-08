@@ -59,12 +59,12 @@ public class Walls extends AbstractEntity {
             for (int i = 0; i < width; i++) {
                 for (int j = 0; j < height; j++) {
                     Tile t = grid[i][j];
-                    double control = t.control;
-                    Color4 c = control > 0 ? Color4.RED : Color4.BLUE;
-                    if (Math.abs(control) > .5) {
-                        c = c.withA(Math.abs(control) / 5 + .1);
+                    //System.out.println(t.control);
+                    Color4 c = t.control > 0 ? Color4.RED : Color4.BLUE;
+                    if (Math.abs(t.control) > .5) {
+                        c = c.withA(Math.abs(t.control) / 5 + .1);
                     } else {
-                        c = c.withA(Math.abs(control) / 5);
+                        c = c.withA(Math.abs(t.control) / 5);
                     }
                     c.glColor();
                     t.LL().glVertex();

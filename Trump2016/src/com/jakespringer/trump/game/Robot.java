@@ -3,22 +3,18 @@ package com.jakespringer.trump.game;
 import com.jakespringer.reagan.Reagan;
 import com.jakespringer.reagan.Signal;
 import com.jakespringer.reagan.game.AbstractEntity;
-import com.jakespringer.reagan.gfx.Graphics2D;
 import com.jakespringer.reagan.gfx.Sprite;
-import com.jakespringer.reagan.input.Input;
 import com.jakespringer.reagan.math.Color4;
 import com.jakespringer.reagan.math.Vec2;
 import com.jakespringer.reagan.util.Mutable;
-
 import static com.jakespringer.trump.game.Tile.WallType.*;
-
 import com.jakespringer.trump.network.NetworkedMain;
 import com.jakespringer.trump.network.RobotDestroyedEvent;
 import com.jakespringer.trump.network.RobotStateEvent;
 import com.jakespringer.trump.particle.ParticleBurst;
 import com.jakespringer.trump.platfinder.NodeGraph;
 import com.jakespringer.trump.platfinder.NodeGraph.Connection;
-
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -50,7 +46,7 @@ public class Robot extends AbstractEntity {
     @Override
     public void create() {
         //Position and velocity
-        Signal<Double> speed = new Signal<>(150.);
+        Signal<Double> speed = new Signal<>(145.);
         velocity = new Signal<>(new Vec2()).sendOn(Reagan.continuous, (dt, v) -> v.withX(0));
         position = new Signal<>(new Vec2());
         add(velocity, position);
@@ -89,26 +85,33 @@ public class Robot extends AbstractEntity {
                                 c.o = null;
                             }
                         } else if (list != null && position.get().subtract(goal).length() > 100) {
-                        	explode();
+                            explode(true);
                         }
                     }
                 }
             }
         });
-        
+
+        //Push away from other Robots
         onUpdate(dt -> {
-			Vec2 goal = team ? redGoal : blueGoal;
-			if (goal != null) {
-				List<Connection> list = (team ? NodeGraph.red : NodeGraph.blue)
-						.findNearestPath(position.get(), goal, size);
-				if (list != null) {
-					list.stream()
-							.filter(k -> k != null)
-							.forEach(
-									k -> Graphics2D.drawLine(k.from.p.toVec2(),
-											k.to.p.toVec2(), Color4.RED, 4));
-				}
-			}
+            redList.forEach(r -> {
+                if (r != this) {
+                    if (Walls.collideAABB(position.get(), size, r.position.get(), size)) {
+                        if (position.get().x != r.position.get().x) {
+                            velocity.edit(v -> v.add(position.get().subtract(r.position.get()).withY(0).withLength(10)));
+                        }
+                    }
+                }
+            });
+            blueList.forEach(r -> {
+                if (r != this) {
+                    if (Walls.collideAABB(position.get(), size, r.position.get(), size)) {
+                        if (position.get().x != r.position.get().x) {
+                            velocity.edit(v -> v.add(position.get().subtract(r.position.get()).withY(0).withLength(10)));
+                        }
+                    }
+                }
+            });
         });
 
         //Collisions
@@ -139,7 +142,11 @@ public class Robot extends AbstractEntity {
 
         //Health
         health = new Signal<>(100.);
-        add(health, health.filter(d -> d < 0).forEach($ -> explode()));
+        Mutable<Boolean> first = new Mutable<>(true);
+        add(health, health.filter(d -> d < 0).filter(d -> first.o).forEach($ -> {
+            first.o = false;
+            explode(false);
+        }));
 
         //Robot lists
         if (team) {
@@ -154,19 +161,17 @@ public class Robot extends AbstractEntity {
             if (t > .5) {
                 speed.set(150.);
                 List<Robot> enemy = team ? blueList : redList;
-                enemy.stream().sorted((r1, r2)
-                        -> (int) Math.signum(r1.position.get().subtract(position.get()).lengthSquared() - r2.position.get().subtract(position.get()).lengthSquared()))
+                enemy.stream().filter(r -> r.position.get().subtract(position.get()).lengthSquared() < 100 * 100)
+                        .sorted(Comparator.comparingDouble(r -> r.position.get().subtract(position.get()).lengthSquared()))
                         .findFirst().ifPresent(r -> {
-                            if (r.position.get().subtract(position.get()).lengthSquared() < 100 * 100) {
-                                Bullet b = new Bullet();
-                                b.team = team;
-                                Reagan.world().add(b);
-                                b.position.set(position.get());
-                                b.velocity.set(r.position.get().subtract(position.get()).withLength(600));
+                            Bullet b = new Bullet();
+                            b.team = team;
+                            Reagan.world().add(b);
+                            b.position.set(position.get());
+                            b.velocity.set(r.position.get().subtract(position.get()).withLength(600));
 
-                                fireTime.o = .5 * Math.random();
-                                speed.set(50.);
-                            }
+                            fireTime.o = .5 * Math.random();
+                            speed.set(50.);
                         });
             }
             return dt + fireTime.o;
@@ -193,7 +198,7 @@ public class Robot extends AbstractEntity {
         //Death to spikes
         onUpdate(dt -> {
             if (Walls.tileAt(position.get()).type == SPIKE) {
-                explode();
+                explode(false);
             }
         });
 
@@ -225,7 +230,7 @@ public class Robot extends AbstractEntity {
         super.destroy();
     }
 
-    public void explode() {
+    public void explode(boolean destroyBlocks) {
         ParticleBurst p = new ParticleBurst();
         p.position = position.get();
         p.speed = 300;
@@ -233,6 +238,29 @@ public class Robot extends AbstractEntity {
         p.number = 100;
         p.color = team ? Color4.RED : Color4.BLUE;
         Reagan.world().add(p);
+
+        if (destroyBlocks) {
+            for (int x = 0; x < Walls.walls.width; x++) {
+                for (int y = 0; y < Walls.walls.height; y++) {
+                    Tile t = Walls.walls.grid[x][y];
+                    if (t.type != AIR) {
+                        if (position.get().subtract(t.center()).lengthSquared() < 80 * 80) {
+                            if (t.type == BACKGROUND) {
+                                t.change(AIR, null);
+                            } else {
+                                t.change(BACKGROUND, "stoneBackground");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        (team ? blueList : redList).stream().forEach(r -> {
+            if (position.get().subtract(r.position.get()).lengthSquared() < 80 * 80) {
+                r.health.edit(d -> d - 50);
+            }
+        });
 
         destroy();
     }

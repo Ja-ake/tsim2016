@@ -14,6 +14,9 @@ import static com.jakespringer.trump.game.Tile.WallType.*;
 import com.jakespringer.trump.game.Walls;
 import com.jakespringer.trump.network.NetworkedMain;
 import com.jakespringer.trump.network.PathfindingAlteredEvent;
+import com.jakespringer.trump.platfinder.NodeGraph;
+import com.jakespringer.trump.platfinder.NodeGraph.Connection;
+import java.awt.Font;
 import java.util.ArrayList;
 import java.util.List;
 import static org.lwjgl.opengl.GL11.*;
@@ -27,7 +30,7 @@ public class BuildMenu extends AbstractEntity {
     public Button selected;
     private List<Button> buttonList;
     private boolean canBuild;
-    private int resources;
+    private double resources;
 
     public BuildMenu(boolean team) {
         this.team = new Signal(team);
@@ -39,7 +42,33 @@ public class BuildMenu extends AbstractEntity {
     public void create() {
         createButtons();
 
+        FontContainer.add("Resources", "Calibri", Font.PLAIN, 30);
+
         onUpdate(dt -> {
+            (team.get() ? Robot.redList : Robot.blueList).forEach(n -> {
+                List<Connection> conn = (team.get() ? NodeGraph.red : NodeGraph.blue).findNearestPath(n.position.get(), Input.getMouse(), Robot.size);
+                if (conn != null && !conn.isEmpty()) {
+                    if (conn.get(conn.size() - 1).to.p.toVec2().subtract(Input.getMouse()).length() < 200) {
+                        conn.forEach(c -> Graphics2D.drawLine(c.from.p.toVec2(), c.to.p.toVec2(), Color4.GREEN, 2));
+                    }
+                }
+                Vec2 rgoal = team.get() ? Robot.redGoal : Robot.blueGoal;
+                if (rgoal != null) {
+                    List<Connection> list2 = (team.get() ? NodeGraph.red : NodeGraph.blue).findNearestPath(n.position.get(), rgoal, Robot.size);
+                    if (list2 != null && !list2.isEmpty()) {
+                        Vec2 goal = list2.get(list2.size() - 1).to.p.toVec2();//team.get() ? Robot.redGoal : Robot.blueGoal;
+                        if (goal != null) {
+                            if (rgoal.subtract(goal).length() > 100) {
+                                Graphics2D.drawLine(goal.add(new Vec2(16, 16)), goal.add(new Vec2(-16, -16)), Color4.RED, 4);
+                                Graphics2D.drawLine(goal.add(new Vec2(-16, 16)), goal.add(new Vec2(16, -16)), Color4.RED, 4);
+                            } else {
+                                Graphics2D.fillEllipse(goal, new Vec2(10, 10), Color4.RED, 20);
+                            }
+                        }
+                    }
+                }
+            });
+
             Camera.setProjection2D(new Vec2(), new Vec2(1200, 800));
             Graphics2D.fillRect(new Vec2(), new Vec2(1200, 96), new Color4(.8, .8, .8));
             for (int i = 0; i < buttonList.size(); i++) {
@@ -47,14 +76,15 @@ public class BuildMenu extends AbstractEntity {
                 b.LL = new Vec2(16 + i * 80, 16);
                 b.draw();
             }
-            //Graphics2D.
+            Graphics2D.drawText("Resources: " + (int) resources, "Resources", new Vec2(950, 80), Color.black);
             Camera.setProjection2D(Window.LL(), Window.UR());
 
             if (!Input.getMouseScreen().containedBy(new Vec2(), new Vec2(1200, 96))) {
                 if (selected != null) {
                     if (Input.getMouse().containedBy(new Vec2(1, 1).multiply(Walls.walls.wallSize), new Vec2(Walls.walls.width - 1, Walls.walls.height - 1).multiply(Walls.walls.wallSize))) {
                         Tile t = Walls.tileAt(Input.getMouse());
-                        canBuild = (selected.wt != AIR)
+                        canBuild = selected.cost < resources
+                                && (selected.wt != AIR)
                                 ? (team.get() ? t.control > 0.5 : t.control < -0.5)
                                 && (Walls.walls.grid[t.x + 1][t.y].type != AIR
                                 || Walls.walls.grid[t.x - 1][t.y].type != AIR
@@ -70,6 +100,8 @@ public class BuildMenu extends AbstractEntity {
             }
         });
 
+        onUpdate(dt -> resources = Math.min(1000, resources + dt * 20));
+
         add(Input.whenMouse(0, true).forEach(() -> {
             if (Input.getMouseScreen().containedBy(new Vec2(), new Vec2(1200, 96))) {
                 selected = null;
@@ -81,6 +113,7 @@ public class BuildMenu extends AbstractEntity {
             } else {
                 if (selected != null) {
                     if (canBuild) {
+                        resources -= selected.cost;
                         Tile t = Walls.tileAt(Input.getMouse());
                         t.change(selected.wt, selected.image);
                     }
@@ -103,8 +136,9 @@ public class BuildMenu extends AbstractEntity {
         }));
 
         add(Input.whenMouse(1, true).forEach(() -> {
-            team.edit(t -> !t);
-            createButtons();
+            selected = null;
+            //team.edit(t -> !t);
+            //createButtons();
         }));
     }
 

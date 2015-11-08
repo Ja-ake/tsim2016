@@ -11,7 +11,6 @@ import com.jakespringer.reagan.math.Color4;
 import com.jakespringer.reagan.math.Vec2;
 import com.jakespringer.reagan.util.Mutable;
 import com.jakespringer.trump.game.Menu;
-import com.jakespringer.trump.game.Robot;
 import com.jakespringer.trump.game.Tile;
 import static com.jakespringer.trump.game.Tile.WallType.SPIKE;
 import com.jakespringer.trump.game.Walls;
@@ -47,18 +46,18 @@ public class NodeGraph extends AbstractEntity {
                 if (n != null) {
                     n.from.forEach(c -> Graphics2D.drawLine(c.from.p.toVec2(), c.to.p.toVec2(), new Color4(1, 1, 0), 2));
                     n.from.forEach(c -> Graphics2D.fillEllipse(c.to.p.toVec2(), new Vec2(4, 4), Color4.GREEN, 8));
-                    n.from.forEach(c -> Graphics2D.drawText(c.instructions.time + "", c.to.p.toVec2()));
+                    //n.from.forEach(c -> Graphics2D.drawText(c.instructions.time + "", c.to.p.toVec2()));
                 }
             }
 
-            if (Menu.buildMenu != null && Menu.buildMenu.selected == null) {
-                Robot.redList.forEach(n -> {
-                    List<Connection> conn = NodeGraph.red.findNearestPath(n.position.get(), Input.getMouse(), Robot.size);
-                    if (conn != null) {
-                        conn.stream().filter(k -> k != null).forEach(k -> Graphics2D.drawLine(k.from.p.toVec2(), k.to.p.toVec2(), Color4.GREEN, 4));
-                    }
-                });
-            }
+//            if (Menu.buildMenu != null && Menu.buildMenu.selected == null) {
+//                Robot.redList.forEach(n -> {
+//                    List<Connection> conn = NodeGraph.red.findNearestPath(n.position.get(), Input.getMouse(), Robot.size);
+//                    if (conn != null) {
+//                        conn.stream().filter(k -> k != null).forEach(k -> Graphics2D.drawLine(k.from.p.toVec2(), k.to.p.toVec2(), Color4.GREEN, 4));
+//                    }
+//                });
+//            }
         });
     }
 
@@ -237,49 +236,64 @@ public class NodeGraph extends AbstractEntity {
         }
         return null;
     }
-    
+
     public List<Connection> findNearestPath(Vec2 pos, Vec2 goal, Vec2 size) {
-    	List<Connection> attempt = findPath(pos, goal, size);
-    	if (attempt != null) return attempt;
-    	
+        List<Connection> attempt = findPath(pos, goal, size);
+        if (attempt != null) {
+            return attempt;
+        }
+
         Node start = Walls.tilesAt(pos, size).stream().map(t -> get(nodeGrid, new Point(t.x, t.y))).filter(n -> n != null)
                 .sorted(Comparator.comparingDouble(t -> t.p.toVec2().subtract(pos).lengthSquared())).findFirst().orElse(null);
-        if (start == null) return null;
-        
-        Node end =  findClosestEndPathRec(start, goal, start, new LinkedList<Node>());
+        if (start == null) {
+            return null;
+        }
+
+        Node end = findClosestEndPathRec(start, goal, start, new LinkedList<Node>());
+        if (end.p.toVec2().subtract(goal).length() > 200) {
+            return null;
+        }
         return findPath(pos, end.p.toVec2(), size);
     }
-    
+
     private Node findClosestEndPathRec(Node start, Vec2 target, Node closest, LinkedList<Node> backtrace) {
-    	backtrace.add(start);
-    	
-    	double len = start.p.toVec2().subtract(target).lengthSquared();
-    	double cur = closest.p.toVec2().subtract(target).lengthSquared();
-    	if (len < cur) {
-    		closest = start;
-    	}
-    	
-    	List<Node> toCompare = new LinkedList<>();
-    	for (Connection next : start.from) {
-    		if (backtrace.contains(next.to)) continue;
-    		backtrace.add(next.to);
-    		Node close = findClosestEndPathRec(next.to, target, closest, backtrace);
-    		if (close != null) toCompare.add(close);
-    	}
-    	    	
-    	try {
-	    	return toCompare.stream().min((a, b) -> {
-	        	double len1 = a.p.toVec2().subtract(target).lengthSquared();
-	        	double len2 = b.p.toVec2().subtract(target).lengthSquared();
-	        	if (len1 > len2) return 1;
-	        	if (len1 == len2) return 0;
-	        	return -1;
-	    	}).get();
-    	} catch (Exception e) {
-    		return closest;
-    	}
+        backtrace.add(start);
+
+        double len = start.p.toVec2().subtract(target).lengthSquared();
+        double cur = closest.p.toVec2().subtract(target).lengthSquared();
+        if (len < cur) {
+            closest = start;
+        }
+
+        List<Node> toCompare = new LinkedList<>();
+        for (Connection next : start.from) {
+            if (backtrace.contains(next.to)) {
+                continue;
+            }
+            backtrace.add(next.to);
+            Node close = findClosestEndPathRec(next.to, target, closest, backtrace);
+            if (close != null) {
+                toCompare.add(close);
+            }
+        }
+
+        try {
+            return toCompare.stream().min((a, b) -> {
+                double len1 = a.p.toVec2().subtract(target).lengthSquared();
+                double len2 = b.p.toVec2().subtract(target).lengthSquared();
+                if (len1 > len2) {
+                    return 1;
+                }
+                if (len1 == len2) {
+                    return 0;
+                }
+                return -1;
+            }).get();
+        } catch (Exception e) {
+            return closest;
+        }
     }
-    
+
     private void forEach(BiConsumer<Integer, Integer> f) {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
