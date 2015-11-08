@@ -45,8 +45,8 @@ public class GameState {
 						i += 2;
 						break;
 					case "ROBOTSTATE":
-						RobotStateEvent.handle(args[i + 1], args[i + 2], args[i + 3], args[i + 4], args[i + 5]);
-						i += 6;
+						RobotStateEvent.handle(args[i + 1], args[i + 2], args[i + 3], args[i + 4], args[i + 5], args[i+6]);
+						i += 7;
 						break;
 					case "PATHFINDINGALTERED":
 						PathfindingAlteredEvent.handle(args[i+1], args[i+2], args[i+3]);
