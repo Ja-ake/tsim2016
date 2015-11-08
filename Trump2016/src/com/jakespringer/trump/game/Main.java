@@ -15,7 +15,7 @@ public class Main {
 
         final World world = new World();
 
-        world.add(new Walls());
+        world.addAndGet(new Walls()).loadImage();
         Player p = new Player();
         world.add(p);
         p.position.set(new Vec2(1000, 1500));

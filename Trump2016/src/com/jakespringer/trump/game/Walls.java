@@ -11,6 +11,8 @@ import static com.jakespringer.trump.game.Tile.WallType.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 import javax.imageio.ImageIO;
@@ -31,6 +33,8 @@ public class Walls extends AbstractEntity {
 
     @Override
     public void create() {
+        walls = this;
+
         onUpdate(dt -> {
             glEnable(GL_TEXTURE_2D);
             WHITE.glColor();
@@ -51,9 +55,9 @@ public class Walls extends AbstractEntity {
                 glEnd();
             });
         });
+    }
 
-        walls = this;
-
+    public void loadImage() {
         String fileName = "level";
         //Load image
         BufferedImage image = null;
@@ -71,6 +75,23 @@ public class Walls extends AbstractEntity {
                 grid[x][y] = loadTile(x, y, image.getRGB(x, height - y - 1));
             }
         }
+    }
+
+    public boolean[][] loadText() throws IOException {
+        //Load image
+        List<String> text = Files.readAllLines(Paths.get("levels/text_level.txt"));
+        //Init tile grid
+        width = text.get(0).length();
+        height = text.size();
+        grid = new Tile[width][height];
+        boolean[][] r = new boolean[width][height];
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                r[x][y] = text.get(y).charAt(0) == 'X';
+                grid[x][y] = loadTile(x, y, r[x][y] ? 0 : 1);
+            }
+        }
+        return r;
     }
 
     public Tile loadTile(int x, int y, int color) {
