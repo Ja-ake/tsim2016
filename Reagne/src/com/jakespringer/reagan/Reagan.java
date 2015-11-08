@@ -7,6 +7,8 @@ import java.util.Queue;
 
 public class Reagan {
 
+    public static double timeMult = 1;
+
     private static Queue<Command> commandQueue = new LinkedList<>();
     private static boolean running = true;
     private static World theWorld;
@@ -52,7 +54,7 @@ public class Reagan {
         long previousTime = currentTime;
         while (running) {
             currentTime = System.nanoTime();
-            double deltaTime = ((double) currentTime - (double) previousTime) * 0.000000001;
+            double deltaTime = ((double) currentTime - (double) previousTime) * 0.000000001 * timeMult;
             continuous.set(deltaTime);
             dispatchCommands();
             previousTime = currentTime;
