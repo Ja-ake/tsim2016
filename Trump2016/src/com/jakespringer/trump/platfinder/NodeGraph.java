@@ -184,8 +184,8 @@ public class NodeGraph extends AbstractEntity {
     public List<Connection> findPath(Vec2 pos, Vec2 goal, Vec2 size) {
         Node start = Walls.tilesAt(pos, size).stream().map(t -> get(nodeGrid, new Point(t.x, t.y))).filter(n -> n != null)
                 .sorted(Comparator.comparingDouble(t -> t.p.toVec2().subtract(pos).lengthSquared())).findFirst().orElse(null);
-        Node end = nodeList.stream().filter(n -> n.p.toVec2().subtract(pos).lengthSquared() < 150 * 150)
-                .sorted(Comparator.comparingDouble(n -> n.p.toVec2().subtract(pos).lengthSquared())).findFirst().orElse(null);
+        Node end = nodeList.stream().filter(n -> n.p.toVec2().subtract(goal).lengthSquared() < 150 * 150)
+                .sorted(Comparator.comparingDouble(n -> n.p.toVec2().subtract(goal).lengthSquared())).findFirst().orElse(null);
         if (start == null || end == null) {
             return null;
         }
