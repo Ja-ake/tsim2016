@@ -21,7 +21,7 @@ import static org.lwjgl.opengl.GL11.*;
 public class BuildMenu extends AbstractEntity {
 
     public final Signal<Boolean> team;
-    private Button selected;
+    public Button selected;
     private List<Button> buttonList;
     private boolean canBuild;
 
@@ -52,7 +52,7 @@ public class BuildMenu extends AbstractEntity {
                 if (selected != null) {
                     if (Input.getMouse().containedBy(new Vec2(1, 1).multiply(Walls.walls.wallSize), new Vec2(Walls.walls.width - 1, Walls.walls.height - 1).multiply(Walls.walls.wallSize))) {
                         Tile t = Walls.tileAt(Input.getMouse());
-                        double zoneControl = Walls.walls.zoneControl[t.zone - 1];
+                        double zoneControl = t.control;//Walls.walls.zoneControl[t.zone - 1];
                         canBuild = (selected.wt != AIR)
                                 ? (team.get() ? zoneControl > 0.5 : zoneControl < -0.5)
                                 && (Walls.walls.grid[t.x + 1][t.y].type != AIR
