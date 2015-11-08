@@ -169,8 +169,8 @@ public class Signal<T> implements Supplier<T> {
     public <S> Signal<T> sendOn(final Signal<S> stream, final BiFunction<S, T, T> supplier) {
         final Signal<T> newStream = cloneAndRegister();
         final Consumer<S> consumer = x -> newStream.set(supplier.apply(stream.get(), newStream.get()));
-        stream.forEach(consumer);
-        newStream.removeMeFrom.add(new ImmutableTuple2<>(stream, consumer));
+        Signal<S> test = stream.forEach(consumer);
+        newStream.removeMeFrom.add(new ImmutableTuple2<>(test, consumer));
         return newStream;
     }
 
@@ -185,8 +185,8 @@ public class Signal<T> implements Supplier<T> {
     public <S> Signal<T> sendOn(final Signal<S> stream, final T payload) {
         final Signal<T> newStream = cloneAndRegister();
         final Consumer<S> consumer = x -> newStream.set(payload);
-        stream.forEach(consumer);
-        newStream.removeMeFrom.add(new ImmutableTuple2<>(stream, consumer));
+        Signal<S> test = stream.forEach(consumer);
+        newStream.removeMeFrom.add(new ImmutableTuple2<>(test, consumer));
         return newStream;
     }
 
