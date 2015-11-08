@@ -78,9 +78,9 @@ public class Walls extends AbstractEntity {
             glEnd();
         });
     }
-    
+
     public Vec2 snapToGrid(Vec2 pos) {
-    	return new Vec2(Math.floor(pos.divide(wallSize).x), Math.floor(pos.divide(wallSize).y)).multiply(wallSize);
+        return new Vec2((int) (pos.x / wallSize), (int) (pos.y / wallSize)).multiply(wallSize);
     }
 
     public void loadImage() {

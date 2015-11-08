@@ -1,4 +1,4 @@
-package com.jakespringer.trump.platfinder2;
+package com.jakespringer.trump.platfinder;
 
 import com.jakespringer.reagan.Reagan;
 import com.jakespringer.reagan.game.AbstractEntity;
@@ -116,24 +116,18 @@ public class NodeGraph extends AbstractEntity {
     public static NodeGraph red;
     public static NodeGraph blue;
 
-    public final Boolean[][] grid;
-    public final Node[][] nodeGrid;
-    public final List<Node> nodeList;
-    public final List<Connection> connectionList;
-    public final int width, height;
+    public final Tile[][] tileGrid;
+    public final boolean team;
+    public Boolean[][] grid;
+    public Node[][] nodeGrid;
+    public List<Node> nodeList;
+    public List<Connection> connectionList;
+    public int width, height;
 
     public NodeGraph(Tile[][] tileGrid, boolean team) {
-        width = tileGrid.length;
-        height = tileGrid[0].length;
-        grid = new Boolean[width][height];
-        nodeGrid = new Node[width][height];
-        nodeList = new LinkedList();
-        connectionList = new LinkedList();
-
-        forEach((x, y) -> grid[x][y] = tileGrid[x][y].isSolid(team));
-
-        createNodes();
-        createConnections();
+        this.tileGrid = tileGrid;
+        this.team = team;
+        update();
     }
 
     private void addConnection(Node n1, Node n2, Instructions instructions) {
@@ -290,5 +284,19 @@ public class NodeGraph extends AbstractEntity {
         }
         r.add(new Point(dx, dy));
         return r;
+    }
+
+    public void update() {
+        width = tileGrid.length;
+        height = tileGrid[0].length;
+        grid = new Boolean[width][height];
+        nodeGrid = new Node[width][height];
+        nodeList = new LinkedList();
+        connectionList = new LinkedList();
+
+        forEach((x, y) -> grid[x][y] = tileGrid[x][y].isSolid(team));
+
+        createNodes();
+        createConnections();
     }
 }
