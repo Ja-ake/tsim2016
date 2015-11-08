@@ -15,6 +15,9 @@ public class Input {
 
     private static final Map<Integer, Signal<Boolean>> mouseMap = new HashMap();
     private static final Map<Integer, Signal<Boolean>> keyMap = new HashMap();
+    
+    public static final Signal<Integer> mouseWheel = new Signal<>(0);
+    public static final Signal<Vec2> mouseWorldPosition = new Signal<>(new Vec2());
 
     private static Vec2 mouse;
     private static Vec2 mouseDelta;
@@ -39,6 +42,13 @@ public class Input {
                     mouseMap.get(button).set(Mouse.getEventButtonState());
                 }
             }
+            
+            int dWheel = Mouse.getDWheel();
+            if (dWheel != 0) {
+            	mouseWheel.set(dWheel);
+            }
+            
+            mouseWorldPosition.sendOn(Reagan.continuous, (x, y) -> Input.getMouse());
 
             //Calculate mouse position
             double w = Display.getWidth();
@@ -56,8 +66,9 @@ public class Input {
             double left = (w - vw) / 2;
             double bottom = (h - vh) / 2;
 
-            mouseScreen = new Vec2((Mouse.getX() - left) / vw, (Mouse.getY() - bottom) / vh).multiply(Window.viewSize);
-            mouse = mouseScreen.subtract(Window.viewSize.multiply(.5)).add(Window.viewPos);
+            mouseScreen = new Vec2((Mouse.getX() - left) / vw, (Mouse.getY() - bottom) / vh).multiply(new Vec2(1200, 800));
+            mouse = new Vec2((Mouse.getX() - left) / vw, (Mouse.getY() - bottom) / vh).multiply(Window.viewSize)
+            		.subtract(Window.viewSize.multiply(.5)).add(Window.viewPos);
             mouseDelta = new Vec2(Mouse.getDX() / vw, Mouse.getDY() / vh).multiply(Window.viewSize);
         });
     }
