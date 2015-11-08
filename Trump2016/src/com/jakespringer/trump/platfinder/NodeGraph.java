@@ -13,11 +13,8 @@ import com.jakespringer.reagan.util.Mutable;
 import com.jakespringer.trump.game.Menu;
 import com.jakespringer.trump.game.Robot;
 import com.jakespringer.trump.game.Tile;
-
 import static com.jakespringer.trump.game.Tile.WallType.SPIKE;
-
 import com.jakespringer.trump.game.Walls;
-
 import java.io.File;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -53,11 +50,15 @@ public class NodeGraph extends AbstractEntity {
                     n.from.forEach(c -> Graphics2D.drawText(c.instructions.time + "", c.to.p.toVec2()));
                 }
             }
-            
-            if (Menu.buildMenu != null && Menu.buildMenu.selected == null) Robot.redList.stream().forEach(n -> {
-            	List<Connection> conn = NodeGraph.red.findPath(n.position.get(), Input.getMouse(), Robot.size);
-            	if (conn != null) conn.stream().filter(k -> k != null)
-            		.forEach(k -> Graphics2D.drawLine(k.from.p.toVec2(), k.to.p.toVec2(), Color4.GREEN, 4));});
+
+            if (Menu.buildMenu != null && Menu.buildMenu.selected == null) {
+                Robot.redList.forEach(n -> {
+                    List<Connection> conn = NodeGraph.red.findPath(n.position.get(), Input.getMouse(), Robot.size);
+                    if (conn != null) {
+                        conn.stream().filter(k -> k != null).forEach(k -> Graphics2D.drawLine(k.from.p.toVec2(), k.to.p.toVec2(), Color4.GREEN, 4));
+                    }
+                });
+            }
         });
     }
 
@@ -183,8 +184,8 @@ public class NodeGraph extends AbstractEntity {
     public List<Connection> findPath(Vec2 pos, Vec2 goal, Vec2 size) {
         Node start = Walls.tilesAt(pos, size).stream().map(t -> get(nodeGrid, new Point(t.x, t.y))).filter(n -> n != null)
                 .sorted(Comparator.comparingDouble(t -> t.p.toVec2().subtract(pos).lengthSquared())).findFirst().orElse(null);
-        Node end = Walls.tilesAt(goal, size).stream().map(t -> get(nodeGrid, new Point(t.x, t.y))).filter(n -> n != null)
-                .sorted(Comparator.comparingDouble(t -> t.p.toVec2().subtract(goal).lengthSquared())).findFirst().orElse(null);
+        Node end = nodeList.stream().filter(n -> n.p.toVec2().subtract(pos).lengthSquared() < 150 * 150)
+                .sorted(Comparator.comparingDouble(n -> n.p.toVec2().subtract(pos).lengthSquared())).findFirst().orElse(null);
         if (start == null || end == null) {
             return null;
         }
@@ -236,7 +237,7 @@ public class NodeGraph extends AbstractEntity {
         }
         return null;
     }
-    
+
     public List<Connection> findClosestPath(Vec2 pos, Vec2 goal, Vec2 size) {
         Node start = Walls.tilesAt(pos, size).stream().map(t -> get(nodeGrid, new Point(t.x, t.y))).filter(n -> n != null)
                 .sorted(Comparator.comparingDouble(t -> t.p.toVec2().subtract(pos).lengthSquared())).findFirst().orElse(null);
