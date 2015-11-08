@@ -1,4 +1,4 @@
-package com.jakespringer.trump.test;
+package com.jakespringer.trump.game;
 
 import com.jakespringer.reagan.Reagan;
 import com.jakespringer.reagan.Signal;
