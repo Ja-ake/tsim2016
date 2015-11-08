@@ -32,7 +32,7 @@ public class Robot extends AbstractEntity {
     public int id;
     
     public Robot() {
-    	id = (int) (Math.random()*Long.MAX_VALUE);
+    	id = (int) (Math.random()*Integer.MAX_VALUE);
     }
     
     public Robot(int i) {
