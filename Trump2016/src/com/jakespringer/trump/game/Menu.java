@@ -13,7 +13,8 @@ import com.jakespringer.trump.ui.BuildMenu;
 import com.jakespringer.trump.ui.ViewController;
 
 public class Menu extends AbstractEntity {
-
+	public static BuildMenu buildMenu;
+	
     @Override
     public void create() {
         Texture tex = SpriteContainer.loadSprite("menu");
@@ -31,7 +32,7 @@ public class Menu extends AbstractEntity {
             //Start world - jake fill this out
 
             Reagan.world().addAndGet(new Walls()).loadImage();
-            Reagan.world().addAndGet(new BuildMenu(true));
+            buildMenu = Reagan.world().addAndGet(new BuildMenu(true));
             Reagan.world().addAndGet(new ViewController()).position.set(new Vec2(1000, 1500));
 
             NodeGraph.red = new NodeGraph(Walls.walls.grid, true);

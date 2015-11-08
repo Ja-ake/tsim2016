@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.jakespringer.reagan.Reagan;
 import com.jakespringer.reagan.game.World;
-import com.jakespringer.trump.game.Robot;
 
 
 public class GameState {

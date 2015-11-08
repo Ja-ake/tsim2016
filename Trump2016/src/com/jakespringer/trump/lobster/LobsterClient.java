@@ -36,7 +36,6 @@ public class LobsterClient {
             
             String msg = received.poll();
             if (msg != null) {
-//                System.out.println(msg);
                 String[] args = msg.split("\\s");
                 int messageId = 0;
                 if (args[args.length-1].startsWith("client.")) {

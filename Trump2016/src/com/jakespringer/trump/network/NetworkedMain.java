@@ -8,6 +8,7 @@ import com.jakespringer.reagan.game.World;
 import com.jakespringer.reagan.gfx.FontContainer;
 import com.jakespringer.reagan.gfx.Window;
 import com.jakespringer.reagan.math.Vec2;
+import com.jakespringer.reagan.util.Sounds;
 import com.jakespringer.trump.game.Walls;
 import com.jakespringer.trump.lobster.LobsterClient;
 import com.jakespringer.trump.platfinder.NodeGraph;
@@ -22,32 +23,40 @@ public class NetworkedMain {
 	public static BuildMenu buildMenu;
 	public static boolean bm = true;
 	
-    public static void main(String[] args) throws IOException {
-        System.setProperty("org.lwjgl.librarypath", new File("../Reagne/natives").getAbsolutePath());
-
-        Window.initialize(1200, 800, "Test");
-        final World world = new World();
-        FontContainer.create();
-
-        client = new LobsterClient("10.144.221.50", 55555);   
-        client.commandDispatch = networkHandler = new MainCommandHandler(client);
-
-        client.queued.offer("JOINED");
-        
-        Thread d = new Thread(client::run);
-        d.setDaemon(true);
-        d.start();
-        
-        networked = true;
-
-        world.addAndGet(new Walls()).loadImage();
-        buildMenu = world.addAndGet(new BuildMenu(bm));
-        world.addAndGet(new ViewController()).position.set(new Vec2(1000, 1500));
-        
-        NodeGraph.red = new NodeGraph(Walls.walls.grid, true);
-        NodeGraph.blue = new NodeGraph(Walls.walls.grid, false);
-
-
-        Reagan.run(world);
+    public static void main(String[] args) {
+    	try {
+	        System.setProperty("org.lwjgl.librarypath", new File("../Reagne/natives").getAbsolutePath());
+	
+	        Window.initialize(1200, 800, "Test");
+	        final World world = new World();
+	        FontContainer.create();
+	        
+//	        Sounds.playSound("TRUMPvsSANDERS.mp3", true, 1.0);
+	
+	        client = new LobsterClient("10.144.221.50", 55555);   
+	        client.commandDispatch = networkHandler = new MainCommandHandler(client);
+	
+	        client.queued.offer("JOINED");
+	        
+	        Thread d = new Thread(client::run);
+	        d.setDaemon(true);
+	        d.start();
+	        
+	        networked = true;
+	
+	        world.addAndGet(new Walls()).loadImage();
+	        buildMenu = world.addAndGet(new BuildMenu(bm));
+	        world.addAndGet(new ViewController()).position.set(new Vec2(1000, 1500));
+	        
+	        NodeGraph.red = new NodeGraph(Walls.walls.grid, true);
+	        NodeGraph.blue = new NodeGraph(Walls.walls.grid, false);
+	
+	        Reagan.run(world);
+    	} catch (IOException e) {
+    		e.printStackTrace();
+    	}
+    	    	
+    	Sounds.stopAll();
+    	System.exit(0);
     }
 }
