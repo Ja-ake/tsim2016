@@ -3,11 +3,14 @@ package com.jakespringer.trump.game;
 import com.jakespringer.reagan.Reagan;
 import com.jakespringer.reagan.Signal;
 import com.jakespringer.reagan.game.AbstractEntity;
+import com.jakespringer.reagan.gfx.Graphics2D;
 import com.jakespringer.reagan.gfx.Sprite;
 import com.jakespringer.reagan.math.Color4;
 import com.jakespringer.reagan.math.Vec2;
 import com.jakespringer.reagan.util.Mutable;
 import com.jakespringer.trump.particle.ParticleBurst;
+import com.jakespringer.trump.platfinder2.NodeGraph;
+import com.jakespringer.trump.platfinder2.NodeGraph.Connection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -19,6 +22,8 @@ public class Robot extends AbstractEntity {
 
     public static final Vec2 size = new Vec2(16, 16);
 
+    public static Vec2 redGoal, blueGoal;
+
     public Signal<Vec2> velocity;
     public Signal<Vec2> position;
     public Signal<Double> health;
@@ -28,14 +33,46 @@ public class Robot extends AbstractEntity {
     public void create() {
         //Position and velocity
         Signal<Double> speed = new Signal<>(150.);
-        velocity = new Signal<>(new Vec2()).sendOn(Reagan.continuous, (dt, v) -> v.withX(team ? speed.get() : -speed.get()));
+        velocity = new Signal<>(new Vec2()).sendOn(Reagan.continuous, (dt, v) -> v.withX(0));
+        //.forEach(v -> new RuntimeException(v.toString()).printStackTrace());
         position = new Signal<>(new Vec2());
         add(velocity, position);
 
-        //Collisions
         BooleanSupplier onGround = () -> Walls.collisionAt(position.get().add(new Vec2(0, -1)), size, team);
-        add(Walls.makeCollisionSystem(position, velocity, size, team).filter($ -> onGround.getAsBoolean())
-                .filter(i -> i % 2 == 1).forEach(i -> velocity.edit(v -> v.withY(600))));
+
+        //Follow path
+        Mutable<Connection> c = new Mutable(null);
+        Mutable<Double> time = new Mutable(0.);
+        onUpdate(dt -> {
+            if (c.o != null) {
+                Graphics2D.drawLine(c.o.from.p.toVec2(), c.o.to.p.toVec2(), new Color4(1, .5, 0), 2);
+                if (time.o < c.o.instructions.jumpDelay) {
+                    //Nothing
+                } else if (time.o < c.o.instructions.time) {
+                    velocity.edit(v -> v.withX(speed.get() * Math.signum(c.o.to.p.x - c.o.from.p.x)));
+                } else {
+                    c.o = null;
+                }
+            }
+            time.o += dt;
+            if (c.o == null) {
+                Vec2 goal = team ? redGoal : blueGoal;
+                if (goal != null) {
+                    if (onGround.getAsBoolean()) {
+                        List<Connection> list = (team ? NodeGraph.red : NodeGraph.blue).findPath(position.get(), goal, size);
+                        if (list != null && !list.isEmpty()) {
+                            c.o = list.get(0);
+                            velocity.edit(v -> v.withY(c.o.instructions.jumpSpeed));
+                            time.o = 0.;
+                        }
+                    }
+                }
+            }
+        });
+
+        //Collisions
+        add(Walls.makeCollisionSystem(position, velocity, size, team));//.filter($ -> onGround.getAsBoolean())
+        //.filter(i -> i % 2 == 1).forEach(i -> velocity.edit(v -> v.withY(600))));
 
         //Gravity
         onUpdate(dt -> velocity.edit(v -> v.add(new Vec2(0, -1500 * dt))));
@@ -73,7 +110,7 @@ public class Robot extends AbstractEntity {
 
         //Shooting
         add(new Signal<>(0.).sendOn(Reagan.continuous, (dt, t) -> {
-            Mutable<Double> time = new Mutable(t);
+            Mutable<Double> fireTime = new Mutable(t);
             if (t > .5) {
                 speed.set(150.);
                 List<Robot> enemy = team ? blueList : redList;
@@ -87,12 +124,12 @@ public class Robot extends AbstractEntity {
                                 b.position.set(position.get());
                                 b.velocity.set(r.position.get().subtract(position.get()).withLength(600));
 
-                                time.o = .5 * Math.random();
+                                fireTime.o = .5 * Math.random();
                                 speed.set(50.);
                             }
                         });
             }
-            return dt + time.o;
+            return dt + fireTime.o;
         }));
 
         //Capping zones

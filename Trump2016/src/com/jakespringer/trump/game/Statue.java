@@ -30,11 +30,13 @@ public class Statue extends AbstractEntity {
         //Creating robots
         add(new Signal<>(0.).sendOn(Reagan.continuous, (dt, t) -> {
             if (t > 1) {
-                t -= 1;
-                Robot r = new Robot();
-                r.team = teamRed;
-                Reagan.world().add(r);
-                r.position.set(position.add(size.multiply(.5)));
+                t = 0.;
+                if ((teamRed ? Robot.redList : Robot.blueList).size() < 20) {
+                    Robot r = new Robot();
+                    r.team = teamRed;
+                    Reagan.world().add(r);
+                    r.position.set(position.add(size.multiply(.5)));
+                }
             }
             return t + dt;
         }));
