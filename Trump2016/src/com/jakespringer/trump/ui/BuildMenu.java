@@ -17,26 +17,27 @@ import com.jakespringer.trump.network.PathfindingAlteredEvent;
 import java.util.ArrayList;
 import java.util.List;
 import static org.lwjgl.opengl.GL11.*;
+import org.newdawn.slick.Color;
 
 public class BuildMenu extends AbstractEntity {
+
+    public static BuildMenu menu;
 
     public final Signal<Boolean> team;
     public Button selected;
     private List<Button> buttonList;
     private boolean canBuild;
+    private int resources;
 
     public BuildMenu(boolean team) {
         this.team = new Signal(team);
-        buttonList = new ArrayList<>();
+        resources = 200;
+        menu = this;
     }
 
     @Override
     public void create() {
-        buttonList.add(new Button(WALL, "wood"));
-        buttonList.add(new Button(AIR, null));
-        buttonList.add(new Button(team.get() ? RED_DOOR : BLUE_DOOR, team.get() ? "red_door" : "blue_door"));
-        buttonList.add(new Button(team.get() ? RED_BRIDGE : BLUE_BRIDGE, team.get() ? "red_bridge" : "blue_bridge"));
-        buttonList.add(new Button(SPIKE, "spikes"));
+        createButtons();
 
         onUpdate(dt -> {
             Camera.setProjection2D(new Vec2(), new Vec2(1200, 800));
@@ -46,6 +47,7 @@ public class BuildMenu extends AbstractEntity {
                 b.LL = new Vec2(16 + i * 80, 16);
                 b.draw();
             }
+            //Graphics2D.
             Camera.setProjection2D(Window.LL(), Window.UR());
 
             if (!Input.getMouseScreen().containedBy(new Vec2(), new Vec2(1200, 96))) {
@@ -99,6 +101,21 @@ public class BuildMenu extends AbstractEntity {
                 }
             }
         }));
+
+        add(Input.whenMouse(1, true).forEach(() -> {
+            team.edit(t -> !t);
+            createButtons();
+        }));
+    }
+
+    private void createButtons() {
+        buttonList = new ArrayList<>();
+        buttonList.add(new Button(WALL, "wood", 10));
+        buttonList.add(new Button(AIR, null, 5));
+        buttonList.add(new Button(BACKGROUND, "stoneBackground", 5));
+        buttonList.add(new Button(team.get() ? RED_DOOR : BLUE_DOOR, team.get() ? "red_door" : "blue_door", 40));
+        buttonList.add(new Button(team.get() ? RED_BRIDGE : BLUE_BRIDGE, team.get() ? "red_bridge" : "blue_bridge", 50));
+        buttonList.add(new Button(SPIKE, "spikes", 50));
     }
 
     private class Button {
@@ -107,10 +124,12 @@ public class BuildMenu extends AbstractEntity {
         public final Vec2 size = new Vec2(64, 64);
         public final WallType wt;
         public final String image;
+        public final int cost;
 
-        public Button(WallType wt, String image) {
+        public Button(WallType wt, String image, int cost) {
             this.wt = wt;
             this.image = image;
+            this.cost = cost;
         }
 
         private void draw() {
@@ -135,7 +154,12 @@ public class BuildMenu extends AbstractEntity {
                 Graphics2D.fillRect(LL, size, WHITE);
             }
 
+            if (resources < cost) {
+                Graphics2D.fillRect(LL, size, Color4.RED.withA(.5));
+            }
+
             Graphics2D.drawRect(LL, size, color);
+            Graphics2D.drawText("" + cost, "Default", LL.add(size.multiply(new Vec2(.5, 0))), Color.black);
         }
 
         private boolean mouseOver() {
