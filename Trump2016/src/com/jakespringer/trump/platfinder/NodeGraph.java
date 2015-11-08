@@ -7,6 +7,7 @@ import com.jakespringer.reagan.gfx.Window;
 import com.jakespringer.reagan.math.Vec2;
 import com.jakespringer.reagan.util.Mutable;
 import com.jakespringer.trump.game.Tile;
+import static com.jakespringer.trump.game.Tile.WallType.SPIKE;
 import com.jakespringer.trump.game.Walls;
 import com.jakespringer.trump.ui.BuildMenu;
 import com.jakespringer.trump.ui.ViewController;
@@ -148,7 +149,9 @@ public class NodeGraph {
         forEachNoEdges((x, y) -> {
             if (!grid[x][y]) {
                 if (grid[x][y - 1]) {
-                    addNode(x, y);
+                    if (tileGrid[x][y].type != SPIKE) {
+                        addNode(x, y);
+                    }
                 }
             }
         });
@@ -197,7 +200,7 @@ public class NodeGraph {
                 if (closedSet.contains(c.to)) {
                     return;
                 }
-                double possible_cost = best_cost.get(current) + c.instructions.time - .001;
+                double possible_cost = best_cost.get(current) + c.instructions.time;
                 Double current_cost = best_cost.get(c.to);
                 if (current_cost == null) {
                     openSet.add(c.to);
@@ -238,11 +241,8 @@ public class NodeGraph {
         int dy = n2.p.y - n1.p.y;
         Instructions i = loadInstructions(dx, Math.max(0, dy));
         if (i != null) {
-            List<Point> path = loadPath(dx, dy);
-            if (path != null) {
-                if (path.stream().map(p -> p.multiply(n1.p.x < n2.p.x ? 1 : -1, 1)).allMatch(p -> !get(grid, n1.p.add(p)))) {
-                    addConnection(n1, n2, i);
-                }
+            if (loadPath(dx, dy).stream().map(p -> p.multiply(n1.p.x < n2.p.x ? 1 : -1, 1)).allMatch(p -> !get(grid, n1.p.add(p)))) {
+                addConnection(n1, n2, i);
             }
         }
     }
@@ -255,8 +255,9 @@ public class NodeGraph {
         if (v0 > 600) {
             return null;
         }
-        if (dy == 0) {
+        if (dy == 0 && dx <= 1) {
             v0 = 0;
+            t0 = -.001;
         }
         return new Instructions(v0, t0, t0 + t1);
     }

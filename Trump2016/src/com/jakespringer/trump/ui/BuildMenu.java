@@ -33,6 +33,7 @@ public class BuildMenu extends AbstractEntity {
         buttonList.add(new Button(AIR, null));
         buttonList.add(new Button(team ? RED_DOOR : BLUE_DOOR, team ? "red_door" : "blue_door"));
         buttonList.add(new Button(team ? RED_BRIDGE : BLUE_BRIDGE, team ? "red_bridge" : "blue_bridge"));
+        buttonList.add(new Button(SPIKE, "spikes"));
 
         onUpdate(dt -> {
             Camera.setProjection2D(new Vec2(), new Vec2(1200, 800));

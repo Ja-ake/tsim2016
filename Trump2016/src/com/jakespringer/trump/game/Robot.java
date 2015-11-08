@@ -152,6 +152,9 @@ public class Robot extends AbstractEntity {
         //Capping doors
         onUpdate(dt -> Walls.tilesAt(position.get(), size).stream().filter(t -> t.type == GRAY_DOOR).forEach(t
                 -> t.change(team ? RED_DOOR : BLUE_DOOR, team ? "red_door" : "blue_door")));
+
+        //Death to spikes
+        onUpdate(dt -> Walls.tilesAt(position.get(), size).stream().filter(t -> t.type == SPIKE).forEach(t -> explode()));
     }
 
     @Override
