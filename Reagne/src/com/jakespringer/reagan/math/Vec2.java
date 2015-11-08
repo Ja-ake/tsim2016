@@ -24,7 +24,7 @@ public class Vec2 {
 
     public boolean containedBy(Vec2 v1, Vec2 v2) {
         int q1 = v1.quadrant(this);
-        int q2 = v1.quadrant(this);
+        int q2 = v2.quadrant(this);
         return q1 != q2 && q1 % 2 == q2 % 2;
     }
 
