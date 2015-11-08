@@ -8,6 +8,7 @@ import com.jakespringer.reagan.gfx.Texture;
 import com.jakespringer.reagan.input.Input;
 import com.jakespringer.reagan.math.Color4;
 import com.jakespringer.reagan.math.Vec2;
+import com.jakespringer.trump.network.NetworkedMain;
 import com.jakespringer.trump.platfinder.NodeGraph;
 import com.jakespringer.trump.ui.BuildMenu;
 import com.jakespringer.trump.ui.ViewController;
@@ -29,7 +30,6 @@ public class Menu extends AbstractEntity {
             //Graphics2D.drawText("Play", "Menu", new Vec2((LL.x + UR.x) / 2, UR.y).subtract(new Vec2(600 + FontContainer.get("Menu").getWidth("Play") / 2, 400)), Color.black);
         });
         add(Input.whenMouse(0, true).filter($ -> Input.getMouseScreen().containedBy(LL, UR)).forEach($ -> {
-            //Start world - jake fill this out
 
             Reagan.world().addAndGet(new Walls()).loadImage();
             buildMenu = Reagan.world().addAndGet(new BuildMenu(true));
@@ -39,6 +39,8 @@ public class Menu extends AbstractEntity {
             Reagan.world().add(NodeGraph.red);
             NodeGraph.blue = new NodeGraph(Walls.walls.grid, false);
 
+            NetworkedMain.run();
+            
             destroy();
         }));
     }
