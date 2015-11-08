@@ -5,6 +5,7 @@ import com.jakespringer.reagan.Signal;
 import com.jakespringer.reagan.game.AbstractEntity;
 import static com.jakespringer.reagan.gfx.Graphics2D.drawSpriteFast;
 import com.jakespringer.reagan.gfx.SpriteContainer;
+import com.jakespringer.reagan.math.Color4;
 import static com.jakespringer.reagan.math.Color4.WHITE;
 import com.jakespringer.reagan.math.Vec2;
 import static com.jakespringer.trump.game.Tile.WallType.*;
@@ -15,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import javax.imageio.ImageIO;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -26,7 +28,7 @@ public class Walls extends AbstractEntity {
     public int height;
     public Tile[][] grid;
     public double wallSize = 36;
-    //public Vec2 offset;
+    public double[] zoneControl;
 
     private static final String path = "levels/";
     private static final String type = ".png";
@@ -54,6 +56,26 @@ public class Walls extends AbstractEntity {
                 }
                 glEnd();
             });
+            glDisable(GL_TEXTURE_2D);
+            glBegin(GL_QUADS);
+            for (int i = 0; i < width; i++) {
+                for (int j = 0; j < height; j++) {
+                    Tile t = grid[i][j];
+                    double control = zoneControl[t.zone - 1];
+                    Color4 c = control > 0 ? Color4.RED : Color4.BLUE;
+                    if (Math.abs(control) > .5) {
+                        c = c.withA(Math.abs(control) / 5 + .1);
+                    } else {
+                        c = c.withA(Math.abs(control) / 5);
+                    }
+                    c.glColor();
+                    t.LL().glVertex();
+                    t.LR().glVertex();
+                    t.UR().glVertex();
+                    t.UL().glVertex();
+                }
+            }
+            glEnd();
         });
     }
 
@@ -75,6 +97,39 @@ public class Walls extends AbstractEntity {
                 grid[x][y] = loadTile(x, y, image.getRGB(x, height - y - 1));
             }
         }
+
+        BufferedImage zoneImage = null;
+        try {
+            zoneImage = ImageIO.read(new File(path + fileName + "_zones" + type));
+        } catch (IOException ex) {
+            throw new RuntimeException("Level " + fileName + "_zones" + " doesn't exist");
+        }
+        int maxZone = 0;
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                if (grid[x][y].zone == 0) {
+                    if (zoneImage.getRGB(x, height - y - 1) + 0x1000000 != 0) {
+                        grid[x][y].zone = ++maxZone;
+                        Queue<Tile> toZone = new LinkedList();
+                        toZone.add(grid[x][y]);
+                        while (!toZone.isEmpty()) {
+                            Tile t = toZone.poll();
+                            if (zoneImage.getRGB(t.x, height - t.y - 1) + 0x1000000 != 0) {
+                                for (int i = Math.max(t.x - 1, 0); i <= Math.min(t.x + 1, width - 1); i++) {
+                                    for (int j = Math.max(t.y - 1, 0); j <= Math.min(t.y + 1, height - 1); j++) {
+                                        if (grid[i][j].zone == 0) {
+                                            grid[i][j].zone = maxZone;
+                                            toZone.add(grid[i][j]);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        zoneControl = new double[maxZone];
     }
 
     public boolean[][] loadText() throws IOException {
@@ -87,14 +142,14 @@ public class Walls extends AbstractEntity {
         boolean[][] r = new boolean[width][height];
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                r[x][y] = text.get(height-y-1).charAt(x) == 'X';
+                r[x][y] = text.get(height - y - 1).charAt(x) == 'X';
                 grid[x][y] = r[x][y] ? new Tile(x, y, WALL, "stone") : new Tile(x, y, AIR, null);
             }
         }
         return r;
     }
 
-    public Tile loadTile(int x, int y, int color) {
+    private Tile loadTile(int x, int y, int color) {
         color += 0x1000000; //Because it works
         switch (color) {
             case 0x0: //Black
@@ -116,6 +171,28 @@ public class Walls extends AbstractEntity {
             default: //Anything else, inc. white
                 return new Tile(x, y, AIR, null); //Nothing
         }
+    }
+
+    public static Tile tileAt(Vec2 pos) {
+        return walls.grid[(int) (pos.x / walls.wallSize)][(int) (pos.y / walls.wallSize)];
+    }
+
+    public static List<Tile> tilesAt(Vec2 pos, Vec2 size) {
+        Vec2 v = pos;//.add(walls.offset);
+        Vec2 LL = v.subtract(size).divide(walls.wallSize);
+        Vec2 UR = v.add(size).divide(walls.wallSize);
+        List<Tile> r = new LinkedList();
+        for (int x = Math.max((int) LL.x, 0); x < Math.min(UR.x, walls.width); x++) {
+            for (int y = Math.max((int) LL.y, 0); y < Math.min(UR.y, walls.height); y++) {
+                r.add(walls.grid[x][y]);
+            }
+        }
+        return r;
+    }
+
+    //Collision code
+    public static boolean collideAABB(Vec2 pos1, Vec2 size1, Vec2 pos2, Vec2 size2) {
+        return pos1.subtract(size1).quadrant(pos2.add(size2)) == 1 && pos2.subtract(size2).quadrant(pos1.add(size1)) == 1;
     }
 
     public static boolean collisionAt(Vec2 pos, Vec2 size, boolean team) {
@@ -155,18 +232,5 @@ public class Walls extends AbstractEntity {
             }
             return n;
         });
-    }
-
-    public static List<Tile> tilesAt(Vec2 pos, Vec2 size) {
-        Vec2 v = pos;//.add(walls.offset);
-        Vec2 LL = v.subtract(size).divide(walls.wallSize);
-        Vec2 UR = v.add(size).divide(walls.wallSize);
-        List<Tile> r = new LinkedList();
-        for (int x = Math.max((int) LL.x, 0); x < Math.min(UR.x, walls.width); x++) {
-            for (int y = Math.max((int) LL.y, 0); y < Math.min(UR.y, walls.height); y++) {
-                r.add(walls.grid[x][y]);
-            }
-        }
-        return r;
     }
 }

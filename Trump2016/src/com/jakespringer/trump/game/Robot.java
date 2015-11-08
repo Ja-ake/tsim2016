@@ -6,14 +6,18 @@ import com.jakespringer.reagan.game.AbstractEntity;
 import com.jakespringer.reagan.gfx.Sprite;
 import com.jakespringer.reagan.math.Color4;
 import com.jakespringer.reagan.math.Vec2;
+import com.jakespringer.reagan.util.Mutable;
+import com.jakespringer.trump.particle.ParticleBurst;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 
 public class Robot extends AbstractEntity {
 
-    private static final List<Robot> redList = new LinkedList();
-    private static final List<Robot> blueList = new LinkedList();
+    public static final List<Robot> redList = new LinkedList();
+    public static final List<Robot> blueList = new LinkedList();
+
+    public static final Vec2 size = new Vec2(16, 16);
 
     public Signal<Vec2> velocity;
     public Signal<Vec2> position;
@@ -23,13 +27,14 @@ public class Robot extends AbstractEntity {
     @Override
     public void create() {
         //Position and velocity
-        velocity = new Signal<>(new Vec2()).sendOn(Reagan.continuous, (dt, v) -> v.withX(team ? 150 : -150));
+        Signal<Double> speed = new Signal<>(150.);
+        velocity = new Signal<>(new Vec2()).sendOn(Reagan.continuous, (dt, v) -> v.withX(team ? speed.get() : -speed.get()));
         position = new Signal<>(new Vec2());
         add(velocity, position);
 
         //Collisions
-        BooleanSupplier onGround = () -> Walls.collisionAt(position.get().add(new Vec2(0, -1)), new Vec2(16, 16), team);
-        add(Walls.makeCollisionSystem(position, velocity, new Vec2(16, 16), team).filter($ -> onGround.getAsBoolean())
+        BooleanSupplier onGround = () -> Walls.collisionAt(position.get().add(new Vec2(0, -1)), size, team);
+        add(Walls.makeCollisionSystem(position, velocity, size, team).filter($ -> onGround.getAsBoolean())
                 .filter(i -> i % 2 == 1).forEach(i -> velocity.edit(v -> v.withY(600))));
 
         //Gravity
@@ -57,17 +62,61 @@ public class Robot extends AbstractEntity {
 
         //Health
         health = new Signal<>(100.);
+        add(health, health.filter(d -> d < 0).forEach($ -> explode()));
 
-        //Shooting
+        //Robot lists
         if (team) {
             redList.add(this);
         } else {
             blueList.add(this);
         }
 
+        //Shooting
+        add(new Signal<>(0.).sendOn(Reagan.continuous, (dt, t) -> {
+            Mutable<Double> time = new Mutable(t);
+            if (t > .5) {
+                speed.set(150.);
+                List<Robot> enemy = team ? blueList : redList;
+                enemy.stream().sorted((r1, r2)
+                        -> (int) Math.signum(r1.position.get().subtract(position.get()).lengthSquared() - r2.position.get().subtract(position.get()).lengthSquared()))
+                        .findFirst().ifPresent(r -> {
+                            if (r.position.get().subtract(position.get()).lengthSquared() < 100 * 100) {
+                                Bullet b = new Bullet();
+                                b.team = team;
+                                Reagan.world().add(b);
+                                b.position.set(position.get());
+                                b.velocity.set(r.position.get().subtract(position.get()).withLength(600));
+
+                                time.o = .5 * Math.random();
+                                speed.set(50.);
+                            }
+                        });
+            }
+            return dt + time.o;
+        }));
+
+        //Capping zones
+        onUpdate(dt -> {
+            int zone = Walls.tileAt(position.get()).zone;
+            Walls.walls.zoneControl[zone - 1] += ((team ? 1 : -1) - Walls.walls.zoneControl[zone - 1]) / 100;
+            Walls.walls.zoneControl[zone - 1] = Math.min(1, Math.max(-1, Walls.walls.zoneControl[zone - 1]));
+        });
+    }
+
+    @Override
+    public void destroy() {
+        (team ? redList : blueList).remove(this);
+        super.destroy();
     }
 
     public void explode() {
+        ParticleBurst p = new ParticleBurst();
+        p.position = position.get();
+        p.speed = 100;
+        p.lifeTime = .5;
+        p.number = 100;
+        p.color = team ? Color4.RED : Color4.BLUE;
+        Reagan.world().add(p);
 
         destroy();
     }

@@ -3,11 +3,9 @@ package com.jakespringer.trump.game;
 import com.jakespringer.reagan.Reagan;
 import com.jakespringer.reagan.Signal;
 import com.jakespringer.reagan.game.AbstractEntity;
-import com.jakespringer.reagan.gfx.Graphics2D;
 import com.jakespringer.reagan.gfx.Sprite;
 import com.jakespringer.reagan.gfx.Window;
 import com.jakespringer.reagan.input.Input;
-import com.jakespringer.reagan.math.Color4;
 import com.jakespringer.reagan.math.Vec2;
 import java.util.function.BooleanSupplier;
 import org.lwjgl.input.Keyboard;
@@ -62,36 +60,13 @@ public class Player extends AbstractEntity {
             r.position.set(position.get());
         }));
 
-        //Shooting
-        add(Input.whileMouseDown(0).forEach($ -> Reagan.world().add(new Bullet())));
-
         //Moving view
         onUpdate(dt -> Window.viewPos = position.get().interpolate(Window.viewPos, dt * 4));
-    }
 
-    private class Bullet extends AbstractEntity {
-
-        @Override
-        public void create() {
-            //Position and velocity
-            Signal<Vec2> v2 = new Signal<>(Input.getMouse().subtract(position.get()).withLength(1000));
-            Signal<Vec2> p2 = Movement.makePositionUpdateSystem(v2);
-            p2.set(position.get());
-            add(v2, p2);
-
-            //Destroy on hit wall
-            add(Reagan.continuous.filter(dt -> Walls.collisionAt(p2.get(), new Vec2(4, 4), true)).forEach(dt -> destroy()));
-
-            //Graphics
-            onUpdate(dt -> Graphics2D.fillEllipse(p2.get(), new Vec2(4, 4), Color4.RED, 10));
-
-            //Destroying self after time
-            add(new Signal<>(0.).sendOn(Reagan.continuous, (dt, t) -> {
-                if (t > 1) {
-                    destroy();
-                }
-                return t + dt;
-            }));
-        }
+        //Cheat
+        add(Input.whileMouseDown(2).forEach(dt -> {
+            position.set(Input.getMouse());
+            velocity.set(new Vec2());
+        }));
     }
 }

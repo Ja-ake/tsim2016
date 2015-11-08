@@ -17,6 +17,7 @@ public class Tile {
     public final int x, y;
     public WallType type;
     public Texture image;
+    public int zone;
 
     public Tile(int x, int y, WallType type, String image) {
         this.x = x;
