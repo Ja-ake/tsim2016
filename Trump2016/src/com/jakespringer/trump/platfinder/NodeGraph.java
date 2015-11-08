@@ -10,11 +10,10 @@ import com.jakespringer.reagan.input.Input;
 import com.jakespringer.reagan.math.Color4;
 import com.jakespringer.reagan.math.Vec2;
 import com.jakespringer.reagan.util.Mutable;
+import com.jakespringer.trump.game.Menu;
 import com.jakespringer.trump.game.Tile;
 import static com.jakespringer.trump.game.Tile.WallType.SPIKE;
 import com.jakespringer.trump.game.Walls;
-import com.jakespringer.trump.ui.BuildMenu;
-import com.jakespringer.trump.ui.ViewController;
 import java.io.File;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -32,13 +31,7 @@ public class NodeGraph extends AbstractEntity {
 
         final World world = new World();
 
-        world.addAndGet(new Walls()).loadImage();
-        world.addAndGet(new BuildMenu(true));
-        world.addAndGet(new ViewController()).position.set(new Vec2(1000, 1500));
-
-        red = new NodeGraph(Walls.walls.grid, true);
-        Reagan.world().add(red);
-        blue = new NodeGraph(Walls.walls.grid, false);
+        world.add(new Menu());
 
         Reagan.run(world);
     }

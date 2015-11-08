@@ -1,5 +1,6 @@
 package com.jakespringer.trump.ui;
 
+import com.jakespringer.reagan.Signal;
 import com.jakespringer.reagan.game.AbstractEntity;
 import com.jakespringer.reagan.gfx.*;
 import com.jakespringer.reagan.input.Input;
@@ -19,13 +20,13 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class BuildMenu extends AbstractEntity {
 
-    private boolean team;
+    public final Signal<Boolean> team;
     private Button selected;
     private List<Button> buttonList;
     private boolean canBuild;
 
     public BuildMenu(boolean team) {
-        this.team = team;
+        this.team = new Signal(team);
         buttonList = new ArrayList<>();
     }
 
@@ -33,8 +34,8 @@ public class BuildMenu extends AbstractEntity {
     public void create() {
         buttonList.add(new Button(WALL, "wood"));
         buttonList.add(new Button(AIR, null));
-        buttonList.add(new Button(team ? RED_DOOR : BLUE_DOOR, team ? "red_door" : "blue_door"));
-        buttonList.add(new Button(team ? RED_BRIDGE : BLUE_BRIDGE, team ? "red_bridge" : "blue_bridge"));
+        buttonList.add(new Button(team.get() ? RED_DOOR : BLUE_DOOR, team.get() ? "red_door" : "blue_door"));
+        buttonList.add(new Button(team.get() ? RED_BRIDGE : BLUE_BRIDGE, team.get() ? "red_bridge" : "blue_bridge"));
         buttonList.add(new Button(SPIKE, "spikes"));
 
         onUpdate(dt -> {
@@ -53,14 +54,14 @@ public class BuildMenu extends AbstractEntity {
                         Tile t = Walls.tileAt(Input.getMouse());
                         double zoneControl = Walls.walls.zoneControl[t.zone - 1];
                         canBuild = (selected.wt != AIR)
-                                ? (team ? zoneControl > 0.5 : zoneControl < -0.5)
+                                ? (team.get() ? zoneControl > 0.5 : zoneControl < -0.5)
                                 && (Walls.walls.grid[t.x + 1][t.y].type != AIR
                                 || Walls.walls.grid[t.x - 1][t.y].type != AIR
                                 || Walls.walls.grid[t.x][t.y + 1].type != AIR
                                 || Walls.walls.grid[t.x][t.y - 1].type != AIR)
                                 && !Robot.blueList.stream().anyMatch(r -> Walls.collideAABB(r.position.get(), Robot.size, t.center(), new Vec2(18, 18)))
                                 && !Robot.redList.stream().anyMatch(r -> Walls.collideAABB(r.position.get(), Robot.size, t.center(), new Vec2(18, 18)))
-                                : (team ? zoneControl > 0.5 : zoneControl < -0.5) && t.type != AIR;
+                                : (team.get() ? zoneControl > 0.5 : zoneControl < -0.5) && t.type != AIR;
 
                         Graphics2D.fillRect(t.LL(), new Vec2(36, 36), canBuild ? Color4.GREEN : Color4.RED);
                     }
@@ -83,7 +84,7 @@ public class BuildMenu extends AbstractEntity {
                         t.change(selected.wt, selected.image);
                     }
                 } else {
-                    if (team) {
+                    if (team.get()) {
                         Robot.redGoal = Input.getMouse();
                         if (NetworkedMain.networked) {
                             NetworkedMain.networkHandler.submit(
