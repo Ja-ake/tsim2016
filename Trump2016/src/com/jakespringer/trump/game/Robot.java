@@ -3,17 +3,22 @@ package com.jakespringer.trump.game;
 import com.jakespringer.reagan.Reagan;
 import com.jakespringer.reagan.Signal;
 import com.jakespringer.reagan.game.AbstractEntity;
+import com.jakespringer.reagan.gfx.Graphics2D;
 import com.jakespringer.reagan.gfx.Sprite;
+import com.jakespringer.reagan.input.Input;
 import com.jakespringer.reagan.math.Color4;
 import com.jakespringer.reagan.math.Vec2;
 import com.jakespringer.reagan.util.Mutable;
+
 import static com.jakespringer.trump.game.Tile.WallType.*;
+
 import com.jakespringer.trump.network.NetworkedMain;
 import com.jakespringer.trump.network.RobotDestroyedEvent;
 import com.jakespringer.trump.network.RobotStateEvent;
 import com.jakespringer.trump.particle.ParticleBurst;
 import com.jakespringer.trump.platfinder.NodeGraph;
 import com.jakespringer.trump.platfinder.NodeGraph.Connection;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -70,7 +75,7 @@ public class Robot extends AbstractEntity {
                 Vec2 goal = team ? redGoal : blueGoal;
                 if (goal != null) {
                     if (onGround.getAsBoolean()) {
-                        List<Connection> list = (team ? NodeGraph.red : NodeGraph.blue).findPath(position.get(), goal, size);
+                        List<Connection> list = (team ? NodeGraph.red : NodeGraph.blue).findNearestPath(position.get(), goal, size);
                         if (list != null && !list.isEmpty()) {
                             c.o = list.get(0);
                             velocity.edit(v -> v.withY(c.o.instructions.jumpSpeed));
@@ -83,10 +88,27 @@ public class Robot extends AbstractEntity {
                             } else {
                                 c.o = null;
                             }
+                        } else if (list != null && position.get().subtract(goal).length() > 100) {
+                        	explode();
                         }
                     }
                 }
             }
+        });
+        
+        onUpdate(dt -> {
+			Vec2 goal = team ? redGoal : blueGoal;
+			if (goal != null) {
+				List<Connection> list = (team ? NodeGraph.red : NodeGraph.blue)
+						.findNearestPath(position.get(), goal, size);
+				if (list != null) {
+					list.stream()
+							.filter(k -> k != null)
+							.forEach(
+									k -> Graphics2D.drawLine(k.from.p.toVec2(),
+											k.to.p.toVec2(), Color4.RED, 4));
+				}
+			}
         });
 
         //Collisions

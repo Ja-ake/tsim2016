@@ -53,7 +53,7 @@ public class NodeGraph extends AbstractEntity {
 
             if (Menu.buildMenu != null && Menu.buildMenu.selected == null) {
                 Robot.redList.forEach(n -> {
-                    List<Connection> conn = NodeGraph.red.findPath(n.position.get(), Input.getMouse(), Robot.size);
+                    List<Connection> conn = NodeGraph.red.findNearestPath(n.position.get(), Input.getMouse(), Robot.size);
                     if (conn != null) {
                         conn.stream().filter(k -> k != null).forEach(k -> Graphics2D.drawLine(k.from.p.toVec2(), k.to.p.toVec2(), Color4.GREEN, 4));
                     }
@@ -237,64 +237,49 @@ public class NodeGraph extends AbstractEntity {
         }
         return null;
     }
-
-    public List<Connection> findClosestPath(Vec2 pos, Vec2 goal, Vec2 size) {
+    
+    public List<Connection> findNearestPath(Vec2 pos, Vec2 goal, Vec2 size) {
+    	List<Connection> attempt = findPath(pos, goal, size);
+    	if (attempt != null) return attempt;
+    	
         Node start = Walls.tilesAt(pos, size).stream().map(t -> get(nodeGrid, new Point(t.x, t.y))).filter(n -> n != null)
                 .sorted(Comparator.comparingDouble(t -> t.p.toVec2().subtract(pos).lengthSquared())).findFirst().orElse(null);
-        Node end = Walls.tilesAt(goal, size).stream().map(t -> get(nodeGrid, new Point(t.x, t.y))).filter(n -> n != null)
-                .sorted(Comparator.comparingDouble(t -> t.p.toVec2().subtract(goal).lengthSquared())).findFirst().orElse(null);
-        if (start == null || end == null) {
-            return null;
-        }
-        Set<Node> closedSet = new HashSet();
-
-        final Map<Node, Double> best_cost = new HashMap();
-        best_cost.put(start, 0.);
-        Map<Node, Connection> best_parent = new HashMap();
-
-        Function<Node, Double> heuristic = n -> Walls.walls.wallSize / 150 * Math.abs(end.p.x - n.p.x);
-
-        ToDoubleFunction<Node> expected_cost = n -> {
-            Double cost = best_cost.get(n);
-            if (cost == null) {
-                cost = 99999.;
-            }
-            return cost + heuristic.apply(n);
-        };
-
-        //PriorityQueue<Node> openSet = new PriorityQueue<>(Comparator.comparingDouble(expected_cost).reversed());
-        LinkedList<Node> openSet = new LinkedList();
-        openSet.add(start);
-
-        while (!openSet.isEmpty()) {
-            Collections.sort(openSet, Comparator.comparingDouble(expected_cost));
-            Node current = openSet.poll();
-            if (current == end) {
-                List<Connection> path = new LinkedList();
-                Mutable<Connection> c = new Mutable(best_parent.get(current));
-                while (c.o != null) {
-                    path.add(0, c.o);
-                    c.o = best_parent.get(c.o.from);
-                }
-                return path;
-            }
-            closedSet.add(current);
-            current.from.stream().filter(c -> !closedSet.contains(c.to)).forEach(c -> {
-                double possible_cost = best_cost.get(current) + c.instructions.time;
-                Double current_cost = best_cost.get(c.to);
-                if (current_cost == null) {
-                    openSet.add(c.to);
-                    best_parent.put(c.to, c);
-                    best_cost.put(c.to, possible_cost);
-                } else if (possible_cost < current_cost) {
-                    best_parent.put(c.to, c);
-                    best_cost.put(c.to, possible_cost);
-                }
-            });
-        }
-        return null;
+        if (start == null) return null;
+        
+        Node end =  findClosestEndPathRec(start, goal, start, new LinkedList<Node>());
+        return findPath(pos, end.p.toVec2(), size);
     }
-
+    
+    private Node findClosestEndPathRec(Node start, Vec2 target, Node closest, LinkedList<Node> backtrace) {
+    	backtrace.add(start);
+    	
+    	double len = start.p.toVec2().subtract(target).lengthSquared();
+    	double cur = closest.p.toVec2().subtract(target).lengthSquared();
+    	if (len < cur) {
+    		closest = start;
+    	}
+    	
+    	List<Node> toCompare = new LinkedList<>();
+    	for (Connection next : start.from) {
+    		if (backtrace.contains(next.to)) continue;
+    		backtrace.add(next.to);
+    		Node close = findClosestEndPathRec(next.to, target, closest, backtrace);
+    		if (close != null) toCompare.add(close);
+    	}
+    	    	
+    	try {
+	    	return toCompare.stream().min((a, b) -> {
+	        	double len1 = a.p.toVec2().subtract(target).lengthSquared();
+	        	double len2 = b.p.toVec2().subtract(target).lengthSquared();
+	        	if (len1 > len2) return 1;
+	        	if (len1 == len2) return 0;
+	        	return -1;
+	    	}).get();
+    	} catch (Exception e) {
+    		return closest;
+    	}
+    }
+    
     private void forEach(BiConsumer<Integer, Integer> f) {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
