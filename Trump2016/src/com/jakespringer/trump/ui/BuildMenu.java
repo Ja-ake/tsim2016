@@ -21,22 +21,31 @@ import com.jakespringer.trump.game.Walls;
 
 public class BuildMenu extends AbstractEntity {
 
-	private final Vec2 position;
-	private final Vec2 size;
-	private Color4 color;
+	private final Vec2 buildPosition;
+	private final Vec2 buildSize;
+	private final Vec2 destroyPosition;
+	private final Vec2 destroySize;
+	private Color4 buildColor;
+	private Color4 destroyColor;
 	private Texture texture;
 	private int numWood = 128;
+	private int numDestroy = 128;
 	private boolean canBuild = false;
+	private boolean canDestroy = false;
 	private boolean buildSelection = false;
+	private boolean destroySelection = false;
 	private boolean redSide;
 	
 //	private Signal<Vec2> displayPosition;
 //	private Signal<Vec2> displaySize;
 	
 	public BuildMenu(boolean red) {
-		position = new Vec2(33, 32);
-		size = new Vec2(4, 4);
-		color = Color4.BLUE;
+		buildPosition = new Vec2(33, 32);
+		buildSize = new Vec2(4, 4);
+		destroyPosition = new Vec2(33+64, 32);
+		destroySize = new Vec2(4, 4);
+		buildColor = Color4.BLUE;
+		destroyColor = Color4.BLUE;
 		redSide = red;
 	}
 	
@@ -45,17 +54,14 @@ public class BuildMenu extends AbstractEntity {
 		texture = SpriteContainer.loadSprite("wood");
 //		FontContainer.add("default", "arial", Font.PLAIN, 32);
 		
-		add(Input.whenMouse(0, true).forEach(() -> {
-			if (Mouse.getX() == 0) {
-				
-			}
-		}));
-		
 		add(Reagan.continuous.forEach(dt -> {
 			Camera.setProjection2D(new Vec2(), new Vec2(1200, 800));
-			Graphics2D.drawSprite(texture, position, size, 0, Color4.WHITE);
-			Graphics2D.drawRect(position.subtract(size.multiply(8)), size.multiply(16), color);
-			Graphics2D.drawText("" + numWood, "Default", position.subtract(size.withX(0).multiply(4)), Color.white);
+			Graphics2D.drawSprite(texture, buildPosition, buildSize, 0, Color4.WHITE);
+			Graphics2D.drawRect(buildPosition.subtract(buildSize.multiply(8)), buildSize.multiply(16), buildColor);
+			Graphics2D.drawText("" + numWood, "Default", buildPosition.subtract(buildSize.withX(0).multiply(4)), Color.white);
+			Graphics2D.fillRect(destroyPosition.subtract(destroySize.multiply(8)), destroySize.multiply(16), Color4.WHITE);
+			Graphics2D.drawRect(destroyPosition.subtract(destroySize.multiply(8)), destroySize.multiply(16), destroyColor);
+			Graphics2D.drawText("" + numDestroy, "Default", destroyPosition.subtract(destroySize.withX(0).multiply(4)), Color.black);
 			Camera.setProjection2D(Window.LL(), Window.UR());
 			
 			Vec2 mpf = Walls.walls.snapToGrid(Input.mouseWorldPosition.get());
@@ -64,12 +70,6 @@ public class BuildMenu extends AbstractEntity {
 						
 			if (buildSelection == true) {
 				try {
-//					System.out.println("hi: " + (Walls.walls.grid[gridx+1][gridy].type == Tile.WallType.AIR
-//							&& Walls.walls.grid[gridx-1][gridy].type == Tile.WallType.AIR
-//							&& Walls.walls.grid[gridx][gridy+1].type == Tile.WallType.AIR
-//							&& Walls.walls.grid[gridx][gridy-1].type == Tile.WallType.AIR));
-					System.out.println(Robot.redList.get(0).position.get());
-
 					if ((!redSide)?(Walls.walls.zoneControl[Walls.walls.grid[gridx][gridy].zone-1] < -0.5):(Walls.walls.zoneControl[Walls.walls.grid[gridx][gridy].zone-1] > 0.5) 
 							&& (!(Walls.walls.grid[gridx+1][gridy].type == Tile.WallType.AIR
 							&& Walls.walls.grid[gridx-1][gridy].type == Tile.WallType.AIR
@@ -89,6 +89,17 @@ public class BuildMenu extends AbstractEntity {
 						canBuild = false;
 					}
 				} catch (ArrayIndexOutOfBoundsException e) {}
+			} else if (destroySelection == true) {
+				try {
+					if ((!redSide)?(Walls.walls.zoneControl[Walls.walls.grid[gridx][gridy].zone-1] < -0.5):(Walls.walls.zoneControl[Walls.walls.grid[gridx][gridy].zone-1] > 0.5) 
+							&& (Walls.walls.grid[gridx][gridy].type == Tile.WallType.WALL)) {
+						Graphics2D.fillRect(mpf, new Vec2(36, 36), Color4.GREEN);
+						canDestroy = true;
+					} else {
+						Graphics2D.fillRect(mpf, new Vec2(36, 36), Color4.RED);
+						canDestroy = false;
+					}
+				} catch (ArrayIndexOutOfBoundsException e) {}
 			}
 		}));
 		
@@ -98,19 +109,34 @@ public class BuildMenu extends AbstractEntity {
 			int gridx = (int) Walls.walls.snapToGrid(Input.getMouse()).divide(Walls.walls.wallSize).x;
 			int gridy = (int) Walls.walls.snapToGrid(Input.getMouse()).divide(Walls.walls.wallSize).y;
 			
-			if (pos.x > position.subtract(size.multiply(8)).x
-					&& pos.y > position.subtract(size.multiply(8)).y
-					&& pos.x < position.subtract(size.multiply(8)).add(size.multiply(16)).x
-					&& pos.y < position.subtract(size.multiply(8)).add(size.multiply(16)).y) {
-				color = color.equals(Color4.BLUE) ? Color4.RED : Color4.BLUE;
+			if (pos.x > buildPosition.subtract(buildSize.multiply(8)).x
+					&& pos.y > buildPosition.subtract(buildSize.multiply(8)).y
+					&& pos.x < buildPosition.subtract(buildSize.multiply(8)).add(buildSize.multiply(16)).x
+					&& pos.y < buildPosition.subtract(buildSize.multiply(8)).add(buildSize.multiply(16)).y) {
+				buildColor = buildColor.equals(Color4.BLUE) ? Color4.RED : Color4.BLUE;
 				buildSelection = !buildSelection;
+				destroySelection = false;
+				destroyColor = destroyColor.BLUE;
+			} if (pos.x > destroyPosition.subtract(destroySize.multiply(8)).x
+					&& pos.y > destroyPosition.subtract(destroySize.multiply(8)).y
+					&& pos.x < destroyPosition.subtract(destroySize.multiply(8)).add(destroySize.multiply(16)).x
+					&& pos.y < destroyPosition.subtract(destroySize.multiply(8)).add(destroySize.multiply(16)).y) {
+				destroyColor = destroyColor.equals(Color4.BLUE) ? Color4.RED : Color4.BLUE;
+				destroySelection = !destroySelection;
+				buildSelection = false;
+				buildColor = Color4.BLUE;
 			} else if (canBuild == true && buildSelection == true && numWood > 0) {
-				System.out.println(gridx + " " + gridy);
 				int oldzone = Walls.walls.grid[gridx][gridy].zone;
 				Walls.walls.grid[gridx][gridy] = new Tile(gridx, gridy, WallType.WALL, "wood");
 				Walls.walls.grid[gridx][gridy].zone = oldzone;
 				
 				--numWood;
+			} else if (canDestroy == true && destroySelection == true && numDestroy > 0) {
+				int oldzone = Walls.walls.grid[gridx][gridy].zone;
+				Walls.walls.grid[gridx][gridy] = new Tile(gridx, gridy, WallType.AIR, null);
+				Walls.walls.grid[gridx][gridy].zone = oldzone;
+				
+				--numDestroy;
 			}
 		}));
 		

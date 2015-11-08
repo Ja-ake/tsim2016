@@ -19,7 +19,7 @@ public class ClientHandler implements Runnable {
     private Socket socket;
     private DataInputStream streamIn;
     private DataOutputStream streamOut;
-    private int id;
+    public final int id;
     
     public final ConcurrentLinkedQueue<String> received;
     public final ConcurrentLinkedQueue<String> queued;
@@ -76,10 +76,7 @@ public class ClientHandler implements Runnable {
                     
                     if (line.equals("PING")) {
                         keepAlive = 10000; // ten seconds
-                    }
-                    
-//                    System.out.println("[Client "+id+"] "+line);
-                    received.offer(line);
+                    } else received.offer(line);
                 }
                 
                 String toSend;

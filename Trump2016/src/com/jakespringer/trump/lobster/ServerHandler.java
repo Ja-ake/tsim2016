@@ -78,10 +78,7 @@ public class ServerHandler implements Runnable {
                     
                     if (line.equals("PING")) {
                         keepAlive = 10000; // ten seconds
-                    }
-                    
-//                    System.out.println("[Server] "+line);
-                    received.offer(line);
+                    } else received.offer(line);
                 }
                 
                 String toSend;

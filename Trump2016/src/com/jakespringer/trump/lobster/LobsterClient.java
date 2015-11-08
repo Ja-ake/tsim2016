@@ -12,6 +12,9 @@ public class LobsterClient {
     
     public final ConcurrentLinkedQueue<String> queued;
     public final ConcurrentLinkedQueue<String> received;
+    
+    public CommandHandler commandDispatch;
+    public boolean dictator = false;
 
     public LobsterClient(String hostname, int port) throws IOException {
         socket = new Socket(hostname, port);
@@ -32,23 +35,41 @@ public class LobsterClient {
             
             String msg = received.poll();
             if (msg != null) {
-                System.out.println(msg);
+//                System.out.println(msg);
                 String[] args = msg.split("\\s");
+                int messageId = 0;
+                if (args[args.length-1].startsWith("client.")) {
+                	 messageId = Integer.parseInt(args[args.length-1].replace("client.", ""));
+                	 String[] argsCopy = args.clone();
+                	 args = new String[argsCopy.length-1];
+                	 for (int i=0; i<args.length; ++i) {
+                		 args[i] = argsCopy[i];
+                	 }
+                }
                 switch (args[0]) {
                 case "SETID":
-                    if (args.length == 1) {
-                        try {
-                            id = Integer.parseInt(args[1]);
-                            System.out.println("id = "+id);
-                        } catch (NumberFormatException e) {
-                        }
+                    try {
+                        id = Integer.parseInt(args[1]);
+                    } catch (NumberFormatException e) {
                     }
                     break;
+                case "DICTATOR":
+                	try {
+                		dictator = Integer.parseInt(args[1]) == id ? true : false;
+                    } catch (NumberFormatException e) {
+                    }
+                default:
+                	if (commandDispatch != null) commandDispatch.handle(messageId, args);
+                	break;
                 }
             } else try {
                 Thread.sleep(1);
             } catch (InterruptedException e) { }
         }
+    }
+    
+    public int getId() {
+    	return id;
     }
     
     public void stop() {
