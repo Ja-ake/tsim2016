@@ -55,7 +55,7 @@ public class Menu extends AbstractEntity {
             Reagan.world().add(NodeGraph.red);
             NodeGraph.blue = new NodeGraph(Walls.walls.grid, false);
                         
-//            NetworkedMain.run();
+            NetworkedMain.run();
             destroy();
         }));
     }
