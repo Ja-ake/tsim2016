@@ -1,7 +1,6 @@
 package com.jakespringer.trump.platfinder;
 
 import com.jakespringer.reagan.Reagan;
-import com.jakespringer.reagan.game.AbstractEntity;
 import com.jakespringer.reagan.game.World;
 import com.jakespringer.reagan.gfx.FontContainer;
 import com.jakespringer.reagan.gfx.Window;
@@ -17,7 +16,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 
-public class NodeGraph extends AbstractEntity {
+public class NodeGraph {
 
     public static void main(String[] args) {
         System.setProperty("org.lwjgl.librarypath", new File("../Reagne/natives").getAbsolutePath());
@@ -32,8 +31,8 @@ public class NodeGraph extends AbstractEntity {
         world.addAndGet(new BuildMenu(true));
         world.addAndGet(new ViewController()).position.set(new Vec2(1000, 1500));
 
-        red = Reagan.world().addAndGet(new NodeGraph(Walls.walls.grid, true));
-        blue = Reagan.world().addAndGet(new NodeGraph(Walls.walls.grid, false));
+        red = new NodeGraph(Walls.walls.grid, true);
+        blue = new NodeGraph(Walls.walls.grid, false);
 
         Reagan.run(world);
     }
@@ -139,10 +138,6 @@ public class NodeGraph extends AbstractEntity {
         Node n = new Node(new Point(x, y));
         nodeGrid[x][y] = n;
         nodeList.add(n);
-    }
-
-    @Override
-    public void create() {
     }
 
     private void createConnections() {

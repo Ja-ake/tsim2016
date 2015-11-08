@@ -158,12 +158,18 @@ public class Walls extends AbstractEntity {
         switch (color) {
             case 0x0: //Black
                 return new Tile(x, y, WALL, "stone"); //Normal wall
+            case 0xFF00: //Green
+                return new Tile(x, y, WALL, "grass"); //Normal wall
+            case 0x7E4400: //Brown
+                return new Tile(x, y, WALL, "dirt"); //Normal wall
+            case 0xFFC75A: //Light brown
+                return new Tile(x, y, WALL, "wood"); //Normal wall
             case 0xFF0000: //Red
                 return new Tile(x, y, RED_DOOR, "red_door"); //Red door
             case 0xFF: //Blue
-                return new Tile(x, y, BLUE_DOOR, "blue_door"); //Red door
-            case 0xFF00: //Green
-                return new Tile(x, y, GRAY_DOOR, "gray_door"); //Red door
+                return new Tile(x, y, BLUE_DOOR, "blue_door"); //Blue door
+            case 0xFF00FF: //Pink
+                return new Tile(x, y, GRAY_DOOR, "gray_door"); //Gray door
             case 0x808080: //Gray
                 return new Tile(x, y, BEDROCK, "bedrock"); //Unbreakable wall
             case 0xC0C0C0: //Light gray

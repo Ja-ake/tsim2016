@@ -10,7 +10,7 @@ public class Tile {
 
     public enum WallType {
 
-        AIR, WALL, BACKGROUND, RED_DOOR, BLUE_DOOR, GRAY_DOOR, BEDROCK;
+        AIR, WALL, BACKGROUND, RED_DOOR, BLUE_DOOR, GRAY_DOOR, BEDROCK, RED_BRIDGE, BLUE_BRIDGE, SPIKE;
     }
 
     private static final Vec2 offset = new Vec2(size() * Walls.walls.width / 2, size() * Walls.walls.height / 2);
@@ -29,11 +29,21 @@ public class Tile {
         }
     }
 
+    public Tile(int x, int y, WallType type, String image, int zone) {
+        this.zone = zone;
+        this.x = x;
+        this.y = y;
+        this.type = type;
+        if (image != null) {
+            this.image = SpriteContainer.loadSprite(image);
+        }
+    }
+
     public boolean isSolid(boolean teamRed) {
         if (teamRed) {
-            return type == WALL || type == BEDROCK || type == BLUE_DOOR;
+            return type == WALL || type == BEDROCK || type == BLUE_DOOR || type == RED_BRIDGE;
         } else {
-            return type == WALL || type == BEDROCK || type == RED_DOOR;
+            return type == WALL || type == BEDROCK || type == RED_DOOR || type == BLUE_BRIDGE;
         }
     }
 
