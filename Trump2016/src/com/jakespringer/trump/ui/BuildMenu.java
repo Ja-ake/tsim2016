@@ -52,16 +52,15 @@ public class BuildMenu extends AbstractEntity {
                 if (selected != null) {
                     if (Input.getMouse().containedBy(new Vec2(1, 1).multiply(Walls.walls.wallSize), new Vec2(Walls.walls.width - 1, Walls.walls.height - 1).multiply(Walls.walls.wallSize))) {
                         Tile t = Walls.tileAt(Input.getMouse());
-                        double zoneControl = t.control;//Walls.walls.zoneControl[t.zone - 1];
                         canBuild = (selected.wt != AIR)
-                                ? (team.get() ? zoneControl > 0.5 : zoneControl < -0.5)
+                                ? (team.get() ? t.control > 0.5 : t.control < -0.5)
                                 && (Walls.walls.grid[t.x + 1][t.y].type != AIR
                                 || Walls.walls.grid[t.x - 1][t.y].type != AIR
                                 || Walls.walls.grid[t.x][t.y + 1].type != AIR
                                 || Walls.walls.grid[t.x][t.y - 1].type != AIR)
                                 && !Robot.blueList.stream().anyMatch(r -> Walls.collideAABB(r.position.get(), Robot.size, t.center(), new Vec2(18, 18)))
                                 && !Robot.redList.stream().anyMatch(r -> Walls.collideAABB(r.position.get(), Robot.size, t.center(), new Vec2(18, 18)))
-                                : (team.get() ? zoneControl > 0.5 : zoneControl < -0.5) && t.type != AIR;
+                                : (team.get() ? t.control > 0.5 : t.control < -0.5) && t.type != AIR;
 
                         Graphics2D.fillRect(t.LL(), new Vec2(36, 36), canBuild ? Color4.GREEN : Color4.RED);
                     }

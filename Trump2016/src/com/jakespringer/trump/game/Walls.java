@@ -16,7 +16,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import javax.imageio.ImageIO;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -28,7 +27,6 @@ public class Walls extends AbstractEntity {
     public int height;
     public Tile[][] grid;
     public double wallSize = 36;
-    public double[] zoneControl;
 
     private static final String path = "levels/";
     private static final String type = ".png";
@@ -61,7 +59,7 @@ public class Walls extends AbstractEntity {
             for (int i = 0; i < width; i++) {
                 for (int j = 0; j < height; j++) {
                     Tile t = grid[i][j];
-                    double control = zoneControl[t.zone - 1];
+                    double control = t.control;
                     Color4 c = control > 0 ? Color4.RED : Color4.BLUE;
                     if (Math.abs(control) > .5) {
                         c = c.withA(Math.abs(control) / 5 + .1);
@@ -108,32 +106,6 @@ public class Walls extends AbstractEntity {
         } catch (IOException ex) {
             throw new RuntimeException("Level " + fileName + "_zones" + " doesn't exist");
         }
-        int maxZone = 0;
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                if (grid[x][y].zone == 0) {
-                    if (zoneImage.getRGB(x, height - y - 1) + 0x1000000 != 0) {
-                        grid[x][y].zone = ++maxZone;
-                        Queue<Tile> toZone = new LinkedList();
-                        toZone.add(grid[x][y]);
-                        while (!toZone.isEmpty()) {
-                            Tile t = toZone.poll();
-                            if (zoneImage.getRGB(t.x, height - t.y - 1) + 0x1000000 != 0) {
-                                for (int i = Math.max(t.x - 1, 0); i <= Math.min(t.x + 1, width - 1); i++) {
-                                    for (int j = Math.max(t.y - 1, 0); j <= Math.min(t.y + 1, height - 1); j++) {
-                                        if (grid[i][j].zone == 0) {
-                                            grid[i][j].zone = maxZone;
-                                            toZone.add(grid[i][j]);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        zoneControl = new double[maxZone];
     }
 
     public boolean[][] loadText() throws IOException {
@@ -175,8 +147,9 @@ public class Walls extends AbstractEntity {
             case 0xC0C0C0: //Light gray
                 return new Tile(x, y, BACKGROUND, "stoneBackground"); //Background wall
             case 0xFFFF00: //Yellow
-                Statue s = Reagan.world().addAndGet(new Statue());
+                Statue s = new Statue();
                 s.position = new Vec2(x, y).multiply(wallSize);
+                Reagan.world().add(s);
                 return new Tile(x, y, BACKGROUND, "stoneBackground"); //Background wall
             default: //Anything else, inc. white
                 return new Tile(x, y, AIR, null); //Nothing
@@ -188,7 +161,7 @@ public class Walls extends AbstractEntity {
     }
 
     public static List<Tile> tilesAt(Vec2 pos, Vec2 size) {
-        Vec2 v = pos;//.add(walls.offset);
+        Vec2 v = pos;
         Vec2 LL = v.subtract(size).divide(walls.wallSize);
         Vec2 UR = v.add(size).divide(walls.wallSize);
         List<Tile> r = new LinkedList();

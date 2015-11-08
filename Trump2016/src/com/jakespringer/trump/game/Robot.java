@@ -152,9 +152,16 @@ public class Robot extends AbstractEntity {
 
         //Capping zones
         onUpdate(dt -> {
-            int zone = Walls.tileAt(position.get()).zone;
-            Walls.walls.zoneControl[zone - 1] += ((team ? 1 : -1) - Walls.walls.zoneControl[zone - 1]) / 100;
-            Walls.walls.zoneControl[zone - 1] = Math.min(1, Math.max(-1, Walls.walls.zoneControl[zone - 1]));
+            for (int x = 0; x < Walls.walls.width; x++) {
+                for (int y = 0; y < Walls.walls.height; y++) {
+                    Tile t = Walls.walls.grid[x][y];
+                    if (t.center().subtract(position.get()).lengthSquared() < 400) {
+                        t.control += ((team ? 1 : -1) - t.control) / 4;
+                    } else {
+                        t.control += ((team ? 1 : -1) - t.control) / t.center().subtract(position.get()).lengthSquared() * 100;
+                    }
+                }
+            }
         });
 
         //Capping doors
@@ -182,6 +189,15 @@ public class Robot extends AbstractEntity {
             NetworkedMain.networkHandler.submit(
                     new RobotDestroyedEvent(id));
         }
+
+        Mutable<Signal> toDestroy = new Mutable(null);
+        toDestroy.o = new Signal<>(0.).sendOn(Reagan.continuous, (dt, t) -> {
+            if (t > 10) {
+                toDestroy.o.remove();
+                Statue.statues[team ? 0 : 1].spawn();
+            }
+            return t + dt;
+        });
 
         (team ? redList : blueList).remove(this);
         super.destroy();

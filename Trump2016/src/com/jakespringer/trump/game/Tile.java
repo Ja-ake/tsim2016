@@ -20,19 +20,10 @@ public class Tile {
     public final int x, y;
     public WallType type;
     public Texture image;
-    public int zone;
+    //public int zone;
+    public double control;
 
     public Tile(int x, int y, WallType type, String image) {
-        this.x = x;
-        this.y = y;
-        this.type = type;
-        if (image != null) {
-            this.image = SpriteContainer.loadSprite(image);
-        }
-    }
-
-    public Tile(int x, int y, WallType type, String image, int zone) {
-        this.zone = zone;
         this.x = x;
         this.y = y;
         this.type = type;
