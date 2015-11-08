@@ -1,19 +1,37 @@
 package com.jakespringer.trump.ui;
 
+import static com.jakespringer.reagan.math.Color4.WHITE;
+import static com.jakespringer.trump.game.Tile.WallType.AIR;
+import static com.jakespringer.trump.game.Tile.WallType.BLUE_BRIDGE;
+import static com.jakespringer.trump.game.Tile.WallType.BLUE_DOOR;
+import static com.jakespringer.trump.game.Tile.WallType.RED_BRIDGE;
+import static com.jakespringer.trump.game.Tile.WallType.RED_DOOR;
+import static com.jakespringer.trump.game.Tile.WallType.SPIKE;
+import static com.jakespringer.trump.game.Tile.WallType.WALL;
+import static org.lwjgl.opengl.GL11.GL_QUADS;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL11.glBegin;
+import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11.glEnd;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import com.jakespringer.reagan.game.AbstractEntity;
-import com.jakespringer.reagan.gfx.*;
+import com.jakespringer.reagan.gfx.Camera;
+import com.jakespringer.reagan.gfx.Graphics2D;
+import com.jakespringer.reagan.gfx.SpriteContainer;
+import com.jakespringer.reagan.gfx.Texture;
+import com.jakespringer.reagan.gfx.Window;
 import com.jakespringer.reagan.input.Input;
 import com.jakespringer.reagan.math.Color4;
-import static com.jakespringer.reagan.math.Color4.WHITE;
 import com.jakespringer.reagan.math.Vec2;
 import com.jakespringer.trump.game.Robot;
 import com.jakespringer.trump.game.Tile;
 import com.jakespringer.trump.game.Tile.WallType;
-import static com.jakespringer.trump.game.Tile.WallType.*;
 import com.jakespringer.trump.game.Walls;
-import java.util.ArrayList;
-import java.util.List;
-import static org.lwjgl.opengl.GL11.*;
+import com.jakespringer.trump.network.NetworkedMain;
+import com.jakespringer.trump.network.PathfindingAlteredEvent;
 
 public class BuildMenu extends AbstractEntity {
 
@@ -24,7 +42,7 @@ public class BuildMenu extends AbstractEntity {
 
     public BuildMenu(boolean team) {
         this.team = team;
-        buttonList = new ArrayList();
+        buttonList = new ArrayList<>();
     }
 
     @Override
@@ -81,8 +99,16 @@ public class BuildMenu extends AbstractEntity {
                 } else {
                     if (team) {
                         Robot.redGoal = Input.getMouse();
+                        if (NetworkedMain.networked) {
+                        	NetworkedMain.networkHandler.submit(
+                        			new PathfindingAlteredEvent(Robot.redGoal.x, Robot.redGoal.y, true));
+                        }
                     } else {
                         Robot.blueGoal = Input.getMouse();
+                        if (NetworkedMain.networked) {
+                        	NetworkedMain.networkHandler.submit(
+                        			new PathfindingAlteredEvent(Robot.blueGoal.x, Robot.blueGoal.y, false));
+                        }
                     }
                 }
             }

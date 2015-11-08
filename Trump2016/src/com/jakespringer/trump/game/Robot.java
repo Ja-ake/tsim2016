@@ -168,7 +168,7 @@ public class Robot extends AbstractEntity {
             }
         });
 
-        add(Reagan.periodic(0.2).forEach(() -> {
+        add(Reagan.periodic(2).forEach(() -> {
             if (NetworkedMain.networked && NetworkedMain.client.dictator) {
                 NetworkedMain.networkHandler.submit(
                         new RobotStateEvent(id, position.get().x, position.get().y, velocity.get().x, velocity.get().y));

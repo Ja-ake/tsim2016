@@ -25,6 +25,6 @@ public class BlockChangedEvent implements GameEvent {
 	public static void handle(String... args) {
 		int nx = Integer.parseInt(args[0]);
 		int ny = Integer.parseInt(args[1]);
-		Walls.walls.grid[nx][ny].change(WallType.valueOf(args[2]), args[3]);
+		Walls.walls.grid[nx][ny].change(WallType.valueOf(args[2]), args[3].equals("null") ? null : args[3]);
 	}
 }

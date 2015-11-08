@@ -21,7 +21,9 @@ public class RobotCreatedEvent implements GameEvent {
 	}
 
 	public static void handle(String... args) {
-		Reagan.world().addAndGet(new Robot(Integer.parseInt(args[0])))
-			.position.set(Statue.statues[Boolean.parseBoolean(args[1])?0:1].position);
+		Robot r = new Robot(Integer.parseInt(args[0]));
+		r.team = Boolean.parseBoolean(args[1]);
+		Reagan.world().addAndGet(r)
+			.position.set(Statue.statues[Boolean.parseBoolean(args[1])?0:1].position.add(new Vec2(18.0, 18.0)));
 	}
 }
