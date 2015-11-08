@@ -4,6 +4,7 @@ import com.jakespringer.reagan.gfx.SpriteContainer;
 import com.jakespringer.reagan.gfx.Texture;
 import com.jakespringer.reagan.math.Vec2;
 import static com.jakespringer.trump.game.Tile.WallType.*;
+import com.jakespringer.trump.platfinder.NodeGraph;
 
 public class Tile {
 
@@ -42,6 +43,19 @@ public class Tile {
 
     public Vec2 center() {
         return new Vec2((x + .5) * size(), (y + .5) * size());
+    }
+
+    public void change(WallType wt, String image) {
+        boolean isSolidRed = isSolid(true);
+        boolean isSolidBlue = isSolid(false);
+        type = wt;
+        this.image = image == null ? null : SpriteContainer.loadSprite(image);
+        if (isSolid(true) != isSolidRed) {
+            NodeGraph.red.update();
+        }
+        if (isSolid(false) != isSolidBlue) {
+            NodeGraph.blue.update();
+        }
     }
 
     public Vec2 LL() {

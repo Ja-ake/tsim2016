@@ -5,10 +5,8 @@ import com.jakespringer.reagan.game.AbstractEntity;
 import com.jakespringer.reagan.game.World;
 import com.jakespringer.reagan.gfx.FontContainer;
 import com.jakespringer.reagan.gfx.Window;
-import com.jakespringer.reagan.input.Input;
 import com.jakespringer.reagan.math.Vec2;
 import com.jakespringer.reagan.util.Mutable;
-import com.jakespringer.trump.game.Robot;
 import com.jakespringer.trump.game.Tile;
 import com.jakespringer.trump.game.Walls;
 import com.jakespringer.trump.ui.BuildMenu;
@@ -145,8 +143,6 @@ public class NodeGraph extends AbstractEntity {
 
     @Override
     public void create() {
-        add(Input.whenMouse(0, true).forEach($ -> Robot.redGoal = Input.getMouse()));
-        add(Input.whenMouse(1, true).forEach($ -> Robot.blueGoal = Input.getMouse()));
     }
 
     private void createConnections() {

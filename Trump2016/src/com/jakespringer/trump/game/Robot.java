@@ -3,11 +3,11 @@ package com.jakespringer.trump.game;
 import com.jakespringer.reagan.Reagan;
 import com.jakespringer.reagan.Signal;
 import com.jakespringer.reagan.game.AbstractEntity;
-import com.jakespringer.reagan.gfx.Graphics2D;
 import com.jakespringer.reagan.gfx.Sprite;
 import com.jakespringer.reagan.math.Color4;
 import com.jakespringer.reagan.math.Vec2;
 import com.jakespringer.reagan.util.Mutable;
+import static com.jakespringer.trump.game.Tile.WallType.*;
 import com.jakespringer.trump.particle.ParticleBurst;
 import com.jakespringer.trump.platfinder.NodeGraph;
 import com.jakespringer.trump.platfinder.NodeGraph.Connection;
@@ -28,15 +28,15 @@ public class Robot extends AbstractEntity {
     public Signal<Vec2> position;
     public Signal<Double> health;
     public boolean team;
-    
+
     public int id;
-    
+
     public Robot() {
-    	id = (int) (Math.random()*Integer.MAX_VALUE);
+        id = (int) (Math.random() * Integer.MAX_VALUE);
     }
-    
+
     public Robot(int i) {
-    	id = i;
+        id = i;
     }
 
     @Override
@@ -55,7 +55,7 @@ public class Robot extends AbstractEntity {
         Mutable<Double> time = new Mutable<>(0.);
         onUpdate(dt -> {
             if (c.o != null) {
-                Graphics2D.drawLine(c.o.from.p.toVec2(), c.o.to.p.toVec2(), new Color4(1, .5, 0), 2);
+                //Graphics2D.drawLine(c.o.from.p.toVec2(), c.o.to.p.toVec2(), new Color4(1, .5, 0), 2);
                 if (time.o < c.o.instructions.jumpDelay) {
                     //Nothing
                 } else if (time.o < c.o.instructions.time) {
@@ -148,6 +148,10 @@ public class Robot extends AbstractEntity {
             Walls.walls.zoneControl[zone - 1] += ((team ? 1 : -1) - Walls.walls.zoneControl[zone - 1]) / 100;
             Walls.walls.zoneControl[zone - 1] = Math.min(1, Math.max(-1, Walls.walls.zoneControl[zone - 1]));
         });
+
+        //Capping doors
+        onUpdate(dt -> Walls.tilesAt(position.get(), size).stream().filter(t -> t.type == GRAY_DOOR).forEach(t
+                -> t.change(team ? RED_DOOR : BLUE_DOOR, team ? "red_door" : "blue_door")));
     }
 
     @Override

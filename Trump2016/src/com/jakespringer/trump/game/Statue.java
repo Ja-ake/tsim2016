@@ -31,7 +31,7 @@ public class Statue extends AbstractEntity {
         add(new Signal<>(0.).sendOn(Reagan.continuous, (dt, t) -> {
             if (t > 1) {
                 t = 0.;
-                if ((teamRed ? Robot.redList : Robot.blueList).size() < 20) {
+                if ((teamRed ? Robot.redList : Robot.blueList).size() < 5) {
                     Robot r = new Robot();
                     r.team = teamRed;
                     Reagan.world().add(r);
