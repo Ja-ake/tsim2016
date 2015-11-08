@@ -1,37 +1,21 @@
 package com.jakespringer.trump.ui;
 
-import static com.jakespringer.reagan.math.Color4.WHITE;
-import static com.jakespringer.trump.game.Tile.WallType.AIR;
-import static com.jakespringer.trump.game.Tile.WallType.BLUE_BRIDGE;
-import static com.jakespringer.trump.game.Tile.WallType.BLUE_DOOR;
-import static com.jakespringer.trump.game.Tile.WallType.RED_BRIDGE;
-import static com.jakespringer.trump.game.Tile.WallType.RED_DOOR;
-import static com.jakespringer.trump.game.Tile.WallType.SPIKE;
-import static com.jakespringer.trump.game.Tile.WallType.WALL;
-import static org.lwjgl.opengl.GL11.GL_QUADS;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
-import static org.lwjgl.opengl.GL11.glBegin;
-import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL11.glEnd;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import com.jakespringer.reagan.game.AbstractEntity;
-import com.jakespringer.reagan.gfx.Camera;
-import com.jakespringer.reagan.gfx.Graphics2D;
-import com.jakespringer.reagan.gfx.SpriteContainer;
-import com.jakespringer.reagan.gfx.Texture;
-import com.jakespringer.reagan.gfx.Window;
+import com.jakespringer.reagan.gfx.*;
 import com.jakespringer.reagan.input.Input;
 import com.jakespringer.reagan.math.Color4;
+import static com.jakespringer.reagan.math.Color4.WHITE;
 import com.jakespringer.reagan.math.Vec2;
 import com.jakespringer.trump.game.Robot;
 import com.jakespringer.trump.game.Tile;
 import com.jakespringer.trump.game.Tile.WallType;
+import static com.jakespringer.trump.game.Tile.WallType.*;
 import com.jakespringer.trump.game.Walls;
 import com.jakespringer.trump.network.NetworkedMain;
 import com.jakespringer.trump.network.PathfindingAlteredEvent;
+import java.util.ArrayList;
+import java.util.List;
+import static org.lwjgl.opengl.GL11.*;
 
 public class BuildMenu extends AbstractEntity {
 
@@ -65,19 +49,21 @@ public class BuildMenu extends AbstractEntity {
 
             if (!Input.getMouseScreen().containedBy(new Vec2(), new Vec2(1200, 96))) {
                 if (selected != null) {
-                    Tile t = Walls.tileAt(Input.getMouse());
-                    double zoneControl = Walls.walls.zoneControl[t.zone - 1];
-                    canBuild = (selected.wt != AIR)
-                            ? (team ? zoneControl > 0.5 : zoneControl < -0.5)
-                            && (Walls.walls.grid[t.x + 1][t.y].type != AIR
-                            || Walls.walls.grid[t.x - 1][t.y].type != AIR
-                            || Walls.walls.grid[t.x][t.y + 1].type != AIR
-                            || Walls.walls.grid[t.x][t.y - 1].type != AIR)
-                            && !Robot.blueList.stream().anyMatch(r -> Walls.collideAABB(r.position.get(), Robot.size, t.center(), new Vec2(18, 18)))
-                            && !Robot.redList.stream().anyMatch(r -> Walls.collideAABB(r.position.get(), Robot.size, t.center(), new Vec2(18, 18)))
-                            : (team ? zoneControl > 0.5 : zoneControl < -0.5) && t.type != AIR;
+                    if (Input.getMouse().containedBy(new Vec2(1, 1).multiply(Walls.walls.wallSize), new Vec2(Walls.walls.width - 1, Walls.walls.height - 1).multiply(Walls.walls.wallSize))) {
+                        Tile t = Walls.tileAt(Input.getMouse());
+                        double zoneControl = Walls.walls.zoneControl[t.zone - 1];
+                        canBuild = (selected.wt != AIR)
+                                ? (team ? zoneControl > 0.5 : zoneControl < -0.5)
+                                && (Walls.walls.grid[t.x + 1][t.y].type != AIR
+                                || Walls.walls.grid[t.x - 1][t.y].type != AIR
+                                || Walls.walls.grid[t.x][t.y + 1].type != AIR
+                                || Walls.walls.grid[t.x][t.y - 1].type != AIR)
+                                && !Robot.blueList.stream().anyMatch(r -> Walls.collideAABB(r.position.get(), Robot.size, t.center(), new Vec2(18, 18)))
+                                && !Robot.redList.stream().anyMatch(r -> Walls.collideAABB(r.position.get(), Robot.size, t.center(), new Vec2(18, 18)))
+                                : (team ? zoneControl > 0.5 : zoneControl < -0.5) && t.type != AIR;
 
-                    Graphics2D.fillRect(t.LL(), new Vec2(36, 36), canBuild ? Color4.GREEN : Color4.RED);
+                        Graphics2D.fillRect(t.LL(), new Vec2(36, 36), canBuild ? Color4.GREEN : Color4.RED);
+                    }
                 }
             }
         });
@@ -100,14 +86,14 @@ public class BuildMenu extends AbstractEntity {
                     if (team) {
                         Robot.redGoal = Input.getMouse();
                         if (NetworkedMain.networked) {
-                        	NetworkedMain.networkHandler.submit(
-                        			new PathfindingAlteredEvent(Robot.redGoal.x, Robot.redGoal.y, true));
+                            NetworkedMain.networkHandler.submit(
+                                    new PathfindingAlteredEvent(Robot.redGoal.x, Robot.redGoal.y, true));
                         }
                     } else {
                         Robot.blueGoal = Input.getMouse();
                         if (NetworkedMain.networked) {
-                        	NetworkedMain.networkHandler.submit(
-                        			new PathfindingAlteredEvent(Robot.blueGoal.x, Robot.blueGoal.y, false));
+                            NetworkedMain.networkHandler.submit(
+                                    new PathfindingAlteredEvent(Robot.blueGoal.x, Robot.blueGoal.y, false));
                         }
                     }
                 }
