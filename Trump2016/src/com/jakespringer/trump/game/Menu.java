@@ -31,6 +31,22 @@ public class Menu extends AbstractEntity {
         });
         add(Input.whenMouse(0, true).filter($ -> Input.getMouseScreen().containedBy(LL, UR)).forEach($ -> {
 
+            for (int i=0; i<4; ++i) {
+            	Cloud c = Reagan.world().addAndGet(new Cloud());
+            	c.position.set(new Vec2(1000+-500*i*Math.random(), 700-Math.random()*140.));
+            	double r = Math.random()*15;
+            	c.velocity.set(new Vec2(r, 0));
+            	c.size = new Vec2(r * (0.8/15.0), r * (0.8/15.0));
+            }
+            
+            Reagan.periodic(10).forEach(() -> {
+            	Cloud c = Reagan.world().addAndGet(new Cloud());
+            	c.position.set(new Vec2(-500*Math.random(), 500+Math.random()*100.));
+            	double r = Math.random()*15;
+            	c.velocity.set(new Vec2(r, 0));
+            	c.size = new Vec2(r * (0.8/15.0), r * (0.8/15.0));
+            });
+        	
             Reagan.world().addAndGet(new Walls()).loadImage();
             buildMenu = Reagan.world().addAndGet(new BuildMenu(true));
             Reagan.world().addAndGet(new ViewController()).position.set(new Vec2(1000, 1500));
@@ -38,9 +54,8 @@ public class Menu extends AbstractEntity {
             NodeGraph.red = new NodeGraph(Walls.walls.grid, true);
             Reagan.world().add(NodeGraph.red);
             NodeGraph.blue = new NodeGraph(Walls.walls.grid, false);
-
-            NetworkedMain.run();
-            
+                        
+//            NetworkedMain.run();
             destroy();
         }));
     }
