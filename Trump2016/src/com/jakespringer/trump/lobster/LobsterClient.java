@@ -15,6 +15,7 @@ public class LobsterClient {
     
     public CommandHandler commandDispatch;
     public boolean dictator = false;
+    public int dictatorId = 0;
 
     public LobsterClient(String hostname, int port) throws IOException {
         socket = new Socket(hostname, port);
@@ -51,13 +52,17 @@ public class LobsterClient {
                     try {
                         id = Integer.parseInt(args[1]);
                     } catch (NumberFormatException e) {
+                    	System.out.println("[WARN] Invalid SETID parameter: " + id);
                     }
                     break;
                 case "DICTATOR":
                 	try {
                 		dictator = Integer.parseInt(args[1]) == id ? true : false;
+                		dictatorId = Integer.parseInt(args[1]);
                     } catch (NumberFormatException e) {
+                    	System.out.println("[WARN] Invalid DICTATOR parameter: " + dictator + ", " + dictatorId);
                     }
+                	break;
                 default:
                 	if (commandDispatch != null) commandDispatch.handle(messageId, args);
                 	break;

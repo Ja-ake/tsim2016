@@ -1,5 +1,14 @@
 package com.jakespringer.trump.game;
 
+import static com.jakespringer.trump.game.Tile.WallType.BLUE_DOOR;
+import static com.jakespringer.trump.game.Tile.WallType.GRAY_DOOR;
+import static com.jakespringer.trump.game.Tile.WallType.RED_DOOR;
+import static com.jakespringer.trump.game.Tile.WallType.SPIKE;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.function.BooleanSupplier;
+
 import com.jakespringer.reagan.Reagan;
 import com.jakespringer.reagan.Signal;
 import com.jakespringer.reagan.game.AbstractEntity;
@@ -7,13 +16,12 @@ import com.jakespringer.reagan.gfx.Sprite;
 import com.jakespringer.reagan.math.Color4;
 import com.jakespringer.reagan.math.Vec2;
 import com.jakespringer.reagan.util.Mutable;
-import static com.jakespringer.trump.game.Tile.WallType.*;
+import com.jakespringer.trump.network.NetworkedMain;
+import com.jakespringer.trump.network.RobotDestroyedEvent;
+import com.jakespringer.trump.network.RobotStateEvent;
 import com.jakespringer.trump.particle.ParticleBurst;
 import com.jakespringer.trump.platfinder.NodeGraph;
 import com.jakespringer.trump.platfinder.NodeGraph.Connection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.function.BooleanSupplier;
 
 public class Robot extends AbstractEntity {
 
@@ -155,10 +163,22 @@ public class Robot extends AbstractEntity {
 
         //Death to spikes
         onUpdate(dt -> Walls.tilesAt(position.get(), size).stream().filter(t -> t.type == SPIKE).forEach(t -> explode()));
+        
+        add(Reagan.periodic(0.2).forEach(() -> {
+        	if (NetworkedMain.networked && NetworkedMain.client.dictator) {
+        		NetworkedMain.networkHandler.submit(
+        				new RobotStateEvent(id, position.get().x, position.get().y, velocity.get().x, velocity.get().y));
+        	}
+        }));
     }
 
     @Override
     public void destroy() {
+    	if (NetworkedMain.networked) {
+    		NetworkedMain.networkHandler.submit(
+    				new RobotDestroyedEvent(id));
+    	}
+    	
         (team ? redList : blueList).remove(this);
         super.destroy();
     }

@@ -88,6 +88,7 @@ public class LobsterServer {
             while (!done) {
                 try {
                     Socket socket = server.accept();
+                    System.out.println("[INFO] Client has connected: " + socket);
                     ClientHandler handle = new ClientHandler(socket, ++currentId);
                     handle.queued.offer("SETID "+currentId);
             		handle.queued.offer("DICTATOR " + authoritarian);

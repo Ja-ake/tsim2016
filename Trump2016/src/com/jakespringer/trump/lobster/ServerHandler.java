@@ -76,6 +76,8 @@ public class ServerHandler implements Runnable {
                     String lineWithNewline = streamIn.readUTF();
                     String line = lineWithNewline.substring(0, lineWithNewline.length()-1);
                     
+                    System.out.println("[MSG] " + line);
+                    
                     if (line.equals("PING")) {
                         keepAlive = 10000; // ten seconds
                     } else received.offer(line);

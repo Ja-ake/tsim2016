@@ -1,8 +1,10 @@
 package com.jakespringer.reagan.game;
 
 import com.jakespringer.reagan.Reagan;
+
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class World {
 
@@ -72,6 +74,17 @@ public class World {
         }
         e.destroy();
         return e;
+    }
+    
+    public void removeIf(Predicate<Entity> pred) {
+    	entityList.removeIf(e -> {
+    		if (pred.test(e)) {
+    			e.destroy();
+    			return true;
+    		}
+    		
+    		return false;
+    	});
     }
 
     /**

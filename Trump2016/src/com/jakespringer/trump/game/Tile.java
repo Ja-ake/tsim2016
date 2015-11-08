@@ -1,13 +1,20 @@
 package com.jakespringer.trump.game;
 
+import static com.jakespringer.trump.game.Tile.WallType.BEDROCK;
+import static com.jakespringer.trump.game.Tile.WallType.BLUE_BRIDGE;
+import static com.jakespringer.trump.game.Tile.WallType.BLUE_DOOR;
+import static com.jakespringer.trump.game.Tile.WallType.RED_BRIDGE;
+import static com.jakespringer.trump.game.Tile.WallType.RED_DOOR;
+import static com.jakespringer.trump.game.Tile.WallType.WALL;
+
 import com.jakespringer.reagan.gfx.SpriteContainer;
 import com.jakespringer.reagan.gfx.Texture;
 import com.jakespringer.reagan.math.Vec2;
-import static com.jakespringer.trump.game.Tile.WallType.*;
+import com.jakespringer.trump.network.BlockChangedEvent;
+import com.jakespringer.trump.network.NetworkedMain;
 import com.jakespringer.trump.platfinder.NodeGraph;
 
-public class Tile {
-
+public class Tile {	
     public enum WallType {
 
         AIR, WALL, BACKGROUND, RED_DOOR, BLUE_DOOR, GRAY_DOOR, BEDROCK, RED_BRIDGE, BLUE_BRIDGE, SPIKE;
@@ -66,6 +73,9 @@ public class Tile {
         if (isSolid(false) != isSolidBlue) {
             NodeGraph.blue.update();
         }
+        
+        if (NetworkedMain.networked) NetworkedMain.networkHandler
+        		.submit(new BlockChangedEvent(x, y, wt.name(), image));
     }
 
     public Vec2 LL() {

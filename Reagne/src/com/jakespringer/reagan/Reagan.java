@@ -1,15 +1,19 @@
 package com.jakespringer.reagan;
 
-import com.jakespringer.reagan.game.World;
-import com.jakespringer.reagan.util.Command;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import com.jakespringer.reagan.game.World;
+import com.jakespringer.reagan.util.Command;
+import com.jakespringer.reagan.util.Event;
 
 public class Reagan {
 
     public static double timeMult = 1;
 
     private static Queue<Command> commandQueue = new LinkedList<>();
+    private static Queue<Command> mainThread = new ConcurrentLinkedQueue<>();
     private static boolean running = true;
     private static World theWorld;
 
@@ -39,6 +43,21 @@ public class Reagan {
         }
 //        commandQueue.add(command);
         command.act();
+    }
+    
+    public static void onMainThread(Command command) {
+    	if (command == null) {
+    		throw new NullPointerException();
+    	}
+    	
+    	mainThread.offer(command);
+    }
+    
+    public static Event periodic(double seconds) {
+    	class MyDouble { public double me; }
+    	final MyDouble accumulatedTime = new MyDouble();
+    	accumulatedTime.me = 0.0;
+    	return (Event) continuous.forEach(dt -> accumulatedTime.me+=dt).filter(x -> (accumulatedTime.me > seconds)).forEach(x -> accumulatedTime.me = 0).asEvent();
     }
 
     /**
@@ -103,5 +122,10 @@ public class Reagan {
 //        while (!commandQueue.isEmpty()) {
 //            commandQueue.remove().act();
 //        }
+    	
+    	int i=0; // don't allow anything to lock up main thread, spread it out
+    	while (!mainThread.isEmpty() && (++i) < 16) {
+    		mainThread.remove().act();
+    	}
     }
 }
