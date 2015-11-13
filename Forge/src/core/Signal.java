@@ -2,7 +2,7 @@ package core;
 
 import java.util.function.*;
 
-public class Signal<T> extends EventStream {
+public class Signal<T> extends EventStream implements Supplier<T> {
 
     private T value;
 
@@ -22,6 +22,7 @@ public class Signal<T> extends EventStream {
         set(o.apply(get()));
     }
 
+    @Override
     public T get() {
         return value;
     }
@@ -31,17 +32,27 @@ public class Signal<T> extends EventStream {
         sendEvent();
     }
 
+    public void set(T... values) {
+        for (T v : values) {
+            set(v);
+        }
+    }
+
     //Interesting functions
     public <R> Signal<R> collect(R r, BiFunction<T, R, R> o) {
         return withRule(new Signal<>(r), r2 -> o.apply(get(), r2));
     }
 
     public Signal<T> combine(Signal<T>... other) {
-        Signal<T> newSig = toSignalRule(() -> get());
+        Signal<T> newSig = copy();
         for (Signal<T> o : other) {
             o.withRule(newSig, () -> o.get());
         }
         return newSig;
+    }
+
+    public Signal<T> copy() {
+        return toSignalRule(() -> get());
     }
 
     public Signal<Integer> count() {
@@ -66,6 +77,10 @@ public class Signal<T> extends EventStream {
         });
     }
 
+    public Signal<T> filter(Supplier<Boolean> s) {
+        return filter(t -> s.get());
+    }
+
     public Signal<T> filterElse(Predicate<T> p, Consumer<Signal<T>> c) {
         return toSignal(s -> {
             if (p.test(get())) {
@@ -81,8 +96,9 @@ public class Signal<T> extends EventStream {
     }
 
     public Signal<T> forEach(Consumer<T> c) {
-        addListener(c);
-        return this;
+        Signal newSig = copy();
+        newSig.addListener(c);
+        return newSig;
     }
 
     public <R> Signal<R> map(Function<T, R> f) {

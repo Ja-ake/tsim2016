@@ -42,6 +42,10 @@ public class EventStream {
     }
 
     //Management
+    public EventStream toEventStream() {
+        return with(new EventStream(), EventStream::sendEvent);
+    }
+
     <R> Signal<R> toSignal(Runnable r) {
         return with(new Signal(), r);
     }
@@ -77,10 +81,16 @@ public class EventStream {
 
     //Interesting functions
     public EventStream combineEventStreams(EventStream... other) {
-        EventStream newStr = with(new EventStream(), EventStream::sendEvent);
+        EventStream newStr = toEventStream();
         for (EventStream o : other) {
             o.with(newStr, EventStream::sendEvent);
         }
+        return newStr;
+    }
+
+    public EventStream onEvent(Runnable r) {
+        EventStream newStr = toEventStream();
+        newStr.addListener(r);
         return newStr;
     }
 }

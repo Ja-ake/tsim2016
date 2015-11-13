@@ -3,18 +3,33 @@ package core;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public abstract class AbstractEntity {
 
-    private final List references = new LinkedList();
+    private final List<EventStream> eventStreams = new LinkedList();
 
-    public void add(Object... o) {
-        references.addAll(Arrays.asList(o));
+    public void add(EventStream... e) {
+        eventStreams.addAll(Arrays.asList(e));
     }
 
-    public abstract void create();
+    protected abstract void create();
 
     public void destroy() {
-        references.clear();
+        eventStreams.forEach(EventStream::destroy);
+        eventStreams.clear();
+    }
+
+    public static AbstractEntity from(Consumer<AbstractEntity> create) {
+        return new AbstractEntity() {
+            @Override
+            public void create() {
+                create.accept(this);
+            }
+        };
+    }
+    
+    protected void onUpdate(Consumer<Double> c) {
+        add(Core.update.forEach(c));
     }
 }
