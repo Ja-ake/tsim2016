@@ -56,6 +56,7 @@ public abstract class Window {
         Graphics2D.fillRect(LL(), viewSize, background);
     }
 
+    //Window utility functions
     public static double aspectRatio() {
         return viewSize.x / viewSize.y;
     }

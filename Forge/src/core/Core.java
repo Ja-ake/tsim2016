@@ -31,4 +31,18 @@ public abstract class Core {
             Display.sync(speed);
         }
     }
+
+    //Time utility functions
+    public static void delay(double delay, Runnable r) {
+        time().filter(t -> t > delay).first(1).onEvent(r);
+    }
+
+    public static EventStream interval(double interval) {
+        Signal<Double> time = time();
+        return time.filter(t -> t > interval).forEach(t -> time.set(t - interval));
+    }
+
+    public static Signal<Double> time() {
+        return update.reduce(0., (dt, t) -> t + dt);
+    }
 }
